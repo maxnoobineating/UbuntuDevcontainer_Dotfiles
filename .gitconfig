@@ -1,0 +1,19 @@
+[user]
+	email = zsdezsc@gmail.com
+	name = maxium
+[credential]
+	helper = store
+[color]
+	ui = true
+[alias]
+	graph = "!f() { git log --all --graph --decorate --oneline \"$@\"; }; f"
+	move-branch = checkout -b
+	add-commit = !git add -A && git commit -m
+	reset-clean = "!f() { git reset --hard \"$@\"; git clean -df; }; f"
+	pwd = "rev-parse --show-toplevel"
+[core]
+	excludesfile = /home/maxium/.gitignore_global
+[gpg]
+	program = gpg
+[commit]
+	gpgsign = false
