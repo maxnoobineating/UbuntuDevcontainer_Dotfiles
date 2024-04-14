@@ -1,6 +1,6 @@
 # Managing Dotfiles with a Bare Git Repository
 For first setting up, run:
-`curl -L  https://gist.githubusercontent.com/VerityEllswood/8c13d419c912bc8601096839ca6b555c/raw/4c99ed13e8f5a737f419822e4515e0a534b6cdec/setup.sh | /bin/bash`
+`curl -L  https://gist.github.com/maxnoobineating/e42e875d0360dec9122ab5d088e66fd0 | /bin/bash`
 
 ## Introduction
 This technique allows you to store your dotfiles in a bare Git repository located in a "side" folder (like `$HOME/.cfg` or `$HOME/.myconfig`). A specially crafted alias is used to run commands against this repository instead of the usual `.git` local folder¹.
