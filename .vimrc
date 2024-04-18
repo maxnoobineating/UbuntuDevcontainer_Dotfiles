@@ -353,7 +353,7 @@ vnoremap Y "+y
 noremap YY "+yy
 noremap P "+p
 " In visual mode, 'D' cuts the selection and puts it in the system clipboard
-vnoremap D "+x
+vnoremap D "0x
 " In normal mode, 'DD' cuts the line and puts it in the system clipboard
 nnoremap DD "+dd
 
