@@ -476,11 +476,15 @@ command! -nargs=1 QLstop call s:QLstop(<f-args>)
 " https://github.com/microsoft/terminal/issues/4335
 if &term =~ '^xterm'
   " enter vim
-  autocmd VimEnter * silent !echo -ne "\e[3 q"
-  " otherwise
-  let &t_EI .= "\<Esc>[1 q"
-  " insert mode
-  let &t_SI .= "\<Esc>[5 q"
+  autocmd VimEnter * silent !echo -ne "\e[2 q"
+
+  " Change cursor depending on mode, like in nvim
+  " Insert mode
+    let &t_SI = "\<Esc>[6 q"
+  " Replace mode
+    let &t_SR = "\<Esc>[4 q"
+  " Normal mode
+    let &t_EI = "\<Esc>[2 q"
   " 1 or 0 -> blinking block
   " 2 -> solid block
   " 3 -> blinking underscore
@@ -488,6 +492,7 @@ if &term =~ '^xterm'
   " Recent versions of xterm (282 or above) also support
   " 5 -> blinking vertical bar
   " 6 -> solid vertical bar
+
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
