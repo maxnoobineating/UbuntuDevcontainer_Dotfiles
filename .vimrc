@@ -243,7 +243,6 @@ let g:ale_lint_on_text_changed = 'always'
 
 call plug#begin('~/.vim/plugged')
 
-
 				let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 				if empty(glob(data_dir . '/autoload/plug.vim'))
 					silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
@@ -271,6 +270,8 @@ call plug#begin('~/.vim/plugged')
                 Plug 'xolox/vim-easytags'
 
                 Plug 'xolox/vim-misc'
+
+                Plug 'tpope/vim-commentary'
 
 call plug#end()
 
@@ -469,3 +470,24 @@ command! -nargs=1 QLstop call s:QLstop(<f-args>)
 " 		echoerr "End Of Recursive Macro"
 "   endif
 " endfunction
+
+
+" block cursor for windows terminal
+" https://github.com/microsoft/terminal/issues/4335
+if &term =~ '^xterm'
+  " enter vim
+  autocmd VimEnter * silent !echo -ne "\e[3 q"
+  " otherwise
+  let &t_EI .= "\<Esc>[1 q"
+  " insert mode
+  let &t_SI .= "\<Esc>[5 q"
+  " 1 or 0 -> blinking block
+  " 2 -> solid block
+  " 3 -> blinking underscore
+  " 4 -> solid underscore
+  " Recent versions of xterm (282 or above) also support
+  " 5 -> blinking vertical bar
+  " 6 -> solid vertical bar
+  " leave vim
+  autocmd VimLeave * silent !echo -ne "\e[5 q"
+endif
