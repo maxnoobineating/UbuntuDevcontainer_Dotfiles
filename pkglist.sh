@@ -56,6 +56,8 @@ apt-get install -y exuberant-ctags
 sudo locale-gen "en_US.UTF-8"
 # Tmux Plugin Manager Install
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+# Tmux Plugins installation
+$(tmux show-environment -g | grep -Po 'TMUX_PLUGIN_MANAGER_PATH=\K[^,]*')/scripts/install_plugins.sh
 
 
 

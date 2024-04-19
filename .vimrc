@@ -350,11 +350,17 @@ function! IsCurosrAtStart()
     return col('.') == 1
 endfunction
 
+" System call for state checking
+function! SystemCall(cmd)
+    call system(a:cmd)
+    return v:shell_error == 0
+endfunction
+
 
 " Clipboard settingss
 " Check if X11 is installed
-if system('dpkg -l | grep xorg > /dev/null 2>&1') == 0
-    echo "X11 is installed. adopted system clipboard"
+if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
+    " echo "X11 is installed. adopted system clipboard"
     "setting clipboard
     set clipboard=unnamedplus
     set clipboard+=unnamed
@@ -370,7 +376,7 @@ if system('dpkg -l | grep xorg > /dev/null 2>&1') == 0
     " In normal mode, 'DD' cuts the line and puts it in the system clipboard
     nnoremap DD "+dd
 else
-    echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
+    " echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
     " yanking to system clipboard
     vnoremap Y "0y
     noremap YY "0yy
