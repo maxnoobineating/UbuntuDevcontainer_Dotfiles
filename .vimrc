@@ -118,9 +118,7 @@ augroup END
 if has('syntax') && has('eval')
   packadd! matchit
 endif
-"setting clipboard
-set clipboard=unnamedplus
-set clipboard+=unnamed
+
 
 " Use the Solarized Dark theme
 set background=dark
@@ -129,8 +127,6 @@ let g:solarized_termtrans=1
 
 " Make Vim more useful
 set nocompatible
-" Use the OS clipboard by default (on versions compiled with `+clipboard`)
-set clipboard=unnamed
 " Enhance command-line completion
 set wildmenu
 " Allow cursor keys in insert mode
@@ -273,6 +269,10 @@ call plug#begin('~/.vim/plugged')
 
                 Plug 'tpope/vim-commentary'
 
+                Plug 'tpope/vim-surround'
+
+                Plug 'roxma/vim-tmux-clipboard'
+
 call plug#end()
 
 " Plugin mapping:
@@ -296,6 +296,9 @@ filetype plugin indent on
 " -------- "
 " MAPPINGS "
 " -------- "
+
+" openning register panel
+nnoremap <leader>r :reg<CR>
 
 " replace default gd behaviour (if you want highlighing word under cursor, use *)
 nnoremap gd <C-]>
@@ -348,14 +351,36 @@ function! IsCurosrAtStart()
 endfunction
 
 
-" yanking to system clipboard
-vnoremap Y "+y
-noremap YY "+yy
-noremap P "+p
-" In visual mode, 'D' cuts the selection and puts it in the system clipboard
-vnoremap D "0x
-" In normal mode, 'DD' cuts the line and puts it in the system clipboard
-nnoremap DD "+dd
+" Clipboard settingss
+" Check if X11 is installed
+if system('dpkg -l | grep xorg > /dev/null 2>&1') == 0
+    echo "X11 is installed. adopted system clipboard"
+    "setting clipboard
+    set clipboard=unnamedplus
+    set clipboard+=unnamed
+    " Use the OS clipboard by default (on versions compiled with `+clipboard`)
+    " set clipboard=unnamed
+
+    " yanking to system clipboard
+    vnoremap Y "+y
+    noremap YY "+yy
+    noremap P "+p
+    " In visual mode, 'D' cuts the selection and puts it in the system clipboard
+    vnoremap D "+x
+    " In normal mode, 'DD' cuts the line and puts it in the system clipboard
+    nnoremap DD "+dd
+else
+    echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
+    " yanking to system clipboard
+    vnoremap Y "0y
+    noremap YY "0yy
+    noremap P "0p
+    " In visual mode, 'D' cuts the selection and puts it in the system clipboard
+    vnoremap D "0x
+    " In normal mode, 'DD' cuts the line and puts it in the system clipboard
+    nnoremap DD "0dd
+endif
+
 
 noremap - $
 
@@ -394,6 +419,8 @@ nnoremap <C-c> viwc
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
 nnoremap <C-D> viwd
+
+
 " insert mode indent
 inoremap <C-\> <C-T>
 " insert mode deindent
@@ -425,7 +452,7 @@ function! s:ShowMaps()
 try
   redir @a                           " redirect output to register a
   " Get the list of all key mappings silently, satisfy "Press ENTER to continue"
-  silent map | call feedkeys("\<CR>")    
+  silent map | call feedkeys("\<CR>")
   redir END                          " end output redirection
   vnew                               " new buffer in vertical window
   put a                              " put content of register
