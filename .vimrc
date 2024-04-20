@@ -273,10 +273,20 @@ call plug#begin('~/.vim/plugged')
 
                 Plug 'roxma/vim-tmux-clipboard'
 
+                Plug 'vim-airline/vim-airline'
+
+                Plug 'vim-airline/vim-airline-themes'
+
+                Plug 'kien/ctrlp.vim'
+
 call plug#end()
 
-" Plugin mapping:
-"
+" Plugin mapping & configuration:
+
+" vim-airline-themes config
+" soloarized dark
+let g:airline_solarized_bg='dark'
+
 " tagbar
 nmap <F8> :TagbarToggle fjc<CR>
 
@@ -373,7 +383,10 @@ if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
     " yanking to system clipboard
     vnoremap Y "+y
     noremap YY "+yy
+
     noremap P "+p
+    vnoremap P d"+p
+    "
     " In visual mode, 'D' cuts the selection and puts it in the system clipboard
     vnoremap D "+x
     " In normal mode, 'DD' cuts the line and puts it in the system clipboard
@@ -383,17 +396,20 @@ else
     " yanking to system clipboard
     vnoremap Y "0y
     noremap YY "0yy
+
     noremap P "0p
-    " In visual mode, 'D' cuts the selection and puts it in the system clipboard
+    vnoremap P d"0p
+
     vnoremap D "0x
-    " In normal mode, 'DD' cuts the line and puts it in the system clipboard
     nnoremap DD "0dd
 endif
 
 
 noremap - $
 
+" disable command-line window binding
 nnoremap q: <nop>
+cnoremap q: <nop>
 
 " insert mode add newline
 inoremap \\eo A<CR>
