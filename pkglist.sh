@@ -23,7 +23,7 @@ nvm install 21
 
 
 # Oh-my-zsh Setup: https://ohmyz.sh/
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 # oh-my-zsh plugin download
 # powerlevel10k: https://github.com/romkatv/powerlevel10k?tab=readme-ov-file#installation
 git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
