@@ -267,21 +267,32 @@ call plug#begin('~/.vim/plugged')
 
                 Plug 'xolox/vim-misc'
 
+                " gcc comments
                 Plug 'tpope/vim-commentary'
 
+                " quotation surround
                 Plug 'tpope/vim-surround'
 
+                " syncing vim unamed register with Tmux buffer
                 Plug 'roxma/vim-tmux-clipboard'
 
+                " status bar
                 Plug 'vim-airline/vim-airline'
-
                 Plug 'vim-airline/vim-airline-themes'
 
+                " fuzzy finder
                 Plug 'kien/ctrlp.vim'
+
+                " for dealing with vim swapfile warning shenanigans
+                Plug 'gioele/vim-autoswap'
 
 call plug#end()
 
+" ############################# "
 " Plugin mapping & configuration:
+
+" vim-autoswap config for tmux
+let g:autoswap_detect_tmux = 1
 
 " vim-airline-themes config
 " soloarized dark
@@ -398,7 +409,8 @@ else
     noremap YY "0yy
 
     noremap P "0p
-    vnoremap P d"0p
+    " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
+    vnoremap P "0P
 
     vnoremap D "0x
     nnoremap DD "0dd
