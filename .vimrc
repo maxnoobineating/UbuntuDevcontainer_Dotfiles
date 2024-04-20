@@ -297,6 +297,9 @@ filetype plugin indent on
 " MAPPINGS "
 " -------- "
 
+" toggle number sidebar (for more easily tmux select)
+nnoremap <F2> :set number! relativenumber!<CR>
+
 " openning register panel
 nnoremap <leader>r :reg<CR>
 
@@ -478,9 +481,6 @@ com! ShowMaps call s:ShowMaps()      " Enable :ShowMaps to call the function
 nnoremap \m :ShowMaps<CR>
 
 " --------------------------------------------------------------------------------
-
-
-
 " --------------------------------------------------------------------------------
 " failure command when pattern matched for recursive macro fail condition
 " use: `:QLineCheck PATTERN` inside recording to stop the macro when pattern
