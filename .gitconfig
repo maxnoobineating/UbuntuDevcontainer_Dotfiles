@@ -12,7 +12,7 @@
 	reset-clean = "!f() { git reset --hard \"$@\"; git clean -df; }; f"
 	pwd = "rev-parse --show-toplevel"
 [core]
-	excludesfile = /home/maxium/.gitignore_global
+	excludesfile = $HOME/.gitignore_global
 [gpg]
 	program = gpg
 [commit]
