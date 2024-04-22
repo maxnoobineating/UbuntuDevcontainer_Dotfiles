@@ -30,7 +30,7 @@ set number
 set relativenumber
 
 " Always show the status line at the bottom, even if you only have one window open.
-set laststatus=2
+" set laststatus=2
 
 " The backspace key has slightly unintuitive behavior by default. For example,
 " by default, you can't backspace before the insertion point set with 'i'.
@@ -120,10 +120,6 @@ if has('syntax') && has('eval')
 endif
 
 
-" Use the Solarized Dark theme
-set background=dark
-colorscheme solarized
-let g:solarized_termtrans=1
 
 " Make Vim more useful
 set nocompatible
@@ -281,10 +277,13 @@ call plug#begin('~/.vim/plugged')
                 Plug 'vim-airline/vim-airline-themes'
 
                 " fuzzy finder
-                Plug 'kien/ctrlp.vim'
+                " Plug 'kien/ctrlp.vim'
 
                 " for dealing with vim swapfile warning shenanigans
                 Plug 'gioele/vim-autoswap'
+
+                " for solarized theme as plugin
+                Plug 'altercation/vim-colors-solarized'
 
 call plug#end()
 
@@ -294,11 +293,62 @@ call plug#end()
 " vim-autoswap config for tmux
 let g:autoswap_detect_tmux = 1
 
+" Use the Solarized Dark theme
+set t_Co=256
+set background=dark
+colorscheme solarized
+" let g:solarized_termcolors=256
+" let g:solarized_termtrans=1
+
 " vim-airline-themes config
-" soloarized dark
-let g:airline_solarized_bg='dark'
+" soloarized light
+let g:airline_theme='solarized'
+let g:airline_solarized_bg='light'
+" let g:airline_powerline_fonts = 1
+" #############################
+" fall-back unicode font setting
+  " if !exists('g:airline_symbols')
+  "   let g:airline_symbols = {}
+  " endif
+
+  " " unicode symbols
+  " let g:airline_left_sep = '»' 
+  " let g:airline_left_sep = '▶'
+  " let g:airline_right_sep = '«'
+  " let g:airline_right_sep = '◀'
+  " let g:airline_symbols.colnr = ' ㏇:'
+  " let g:airline_symbols.colnr = ' ℅:'
+  " let g:airline_symbols.crypt = '🔒'
+  " let g:airline_symbols.linenr = '☰'
+  " let g:airline_symbols.linenr = ' ␊:'
+  " let g:airline_symbols.linenr = ' ␤:'
+  " let g:airline_symbols.linenr = '¶'
+  " let g:airline_symbols.maxlinenr = ''
+  " let g:airline_symbols.maxlinenr = '㏑'
+  " let g:airline_symbols.branch = '⎇'
+  " let g:airline_symbols.paste = 'ρ'
+  " let g:airline_symbols.paste = 'Þ'
+  " let g:airline_symbols.paste = '∥'
+  " let g:airline_symbols.spell = 'Ꞩ'
+  " let g:airline_symbols.notexists = 'Ɇ'
+  " let g:airline_symbols.notexists = '∄'
+  " let g:airline_symbols.whitespace = 'Ξ'
+
+  " " powerline symbols
+  " let g:airline_left_sep = ''
+  " let g:airline_left_alt_sep = ''
+  " let g:airline_right_sep = ''
+  " let g:airline_right_alt_sep = ''
+  " let g:airline_symbols.branch = ''
+  " let g:airline_symbols.colnr = ' ℅:'
+  " let g:airline_symbols.readonly = ''
+  " let g:airline_symbols.linenr = ' :'
+  " let g:airline_symbols.maxlinenr = '☰ '
+  " let g:airline_symbols.dirty='⚡'
+" #############################
 
 " tagbar
+
 nmap <F8> :TagbarToggle fjc<CR>
 
 " NerdTree
@@ -441,7 +491,6 @@ nnoremap <Up> k
 nnoremap <Down> j
 nnoremap <expr> <Left> col(".") == 1 ? "k$" : "h"
 nnoremap <expr> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == col("$") ? "j0" : "l"
-
 
 " insert mode delete until word end
 inoremap <C-e> <Esc>ldei
