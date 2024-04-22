@@ -1,7 +1,6 @@
 " supposedly this will diable autocomment-out of newlines
 set paste
 
-
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
 
