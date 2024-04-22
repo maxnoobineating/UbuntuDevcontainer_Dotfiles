@@ -1,3 +1,6 @@
+" supposedly this will diable autocomment-out of newlines
+set paste
+
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
 
@@ -286,6 +289,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'altercation/vim-colors-solarized'
 
 call plug#end()
+
 
 " ############################# "
 " Plugin mapping & configuration:
