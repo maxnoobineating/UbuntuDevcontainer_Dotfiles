@@ -375,6 +375,13 @@ autocmd BufWinEnter,SourcePost * silent! :%foldopen!
 " set initial maximum nested folding level (only fold if nested over several level), just in case
 set foldlevelstart=3
 
+" Coc.vim completion binding
+" Enter confirm
+inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
+" tab S-tab navigate
+inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
+inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
+
 " Plugin mappings END
 
 
