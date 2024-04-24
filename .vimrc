@@ -1,5 +1,5 @@
-" supposedly this will diable autocomment-out of newlines
-set paste
+" setting vim default tag file
+set tags=/usr/local/bin/ctags
 
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
@@ -16,7 +16,8 @@ set fileformats=unix,dos
 set nocompatible
 
 " Turn on syntax highlighting.
-syntax on
+syntax enable
+
 
 " Disable the default Vim startup message.
 set shortmess+=I
@@ -33,7 +34,7 @@ set number
 set relativenumber
 
 " Always show the status line at the bottom, even if you only have one window open.
-" set laststatus=2
+set laststatus=2
 
 " The backspace key has slightly unintuitive behavior by default. For example,
 " by default, you can't backspace before the insertion point set with 'i'.
@@ -262,7 +263,8 @@ call plug#begin('~/.vim/plugged')
 
                 Plug 'majutsushi/tagbar'
 
-                Plug 'xolox/vim-easytags'
+                " replaced by tagbar
+                " Plug 'xolox/vim-easytags'
 
                 Plug 'xolox/vim-misc'
 
@@ -279,14 +281,14 @@ call plug#begin('~/.vim/plugged')
                 Plug 'vim-airline/vim-airline'
                 Plug 'vim-airline/vim-airline-themes'
 
-                " fuzzy finder
-                " Plug 'kien/ctrlp.vim'
-
                 " for dealing with vim swapfile warning shenanigans
                 Plug 'gioele/vim-autoswap'
 
                 " for solarized theme as plugin
-                Plug 'altercation/vim-colors-solarized'
+                " Plug 'altercation/vim-colors-solarized'
+
+                " gruvbox theme as plugin
+                Plug 'morhetz/gruvbox'
 
 call plug#end()
 
@@ -295,19 +297,28 @@ call plug#end()
 " Plugin mapping & configuration:
 
 " vim-autoswap config for tmux
-let g:autoswap_detect_tmux = 1
+let g:autoswap_detect_tmux=1
 
-" Use the Solarized Dark theme
-set t_Co=256
+" plugin theme setting
+" autocmd vimenter * ++nested colorscheme gruvbox
+" Setting color scheme config before calling colorscheme
+let &t_ZH="\e[3m"
+let &t_ZR="\e[23m"
+" highlight Comment cterm=italic gui=italic
+" set t_Co=256
 set background=dark
-colorscheme solarized
+let g:solarized_italic=1
+let g:solarzied_italic_comments=1
+" let g:solarized_contrast="high"
 " let g:solarized_termcolors=256
 " let g:solarized_termtrans=1
+colorscheme solarized
+let s:terminal_italic=1
 
-" vim-airline-themes config
-" soloarized light
+" Vim-airline-themes config
 let g:airline_theme='solarized'
-let g:airline_solarized_bg='light'
+" Enable tabline
+" let g:airline#extensions#tabline#enabled = 1
 " let g:airline_powerline_fonts = 1
 " #############################
 " fall-back unicode font setting
@@ -352,14 +363,17 @@ let g:airline_solarized_bg='light'
 " #############################
 
 " tagbar
-
+let g:tagbar_sort = 0
 nmap <F8> :TagbarToggle fjc<CR>
 
 " NerdTree
 nnoremap <leader>n :NERDTreeFocus<CR>
 
-" easyfold, unfold all after fold creation (every new session)
-autocmd BufWinEnter * silent! :%foldopen!
+" Easyfold, unfold all after fold creation (every new session)
+" adding SourcePost event because certain .vim file will ignore foldopen when sourcing ~/.vimrc
+autocmd BufWinEnter,SourcePost * silent! :%foldopen!
+" set initial maximum nested folding level (only fold if nested over several level), just in case
+set foldlevelstart=3
 
 " Plugin mappings END
 
@@ -610,3 +624,12 @@ if &term =~ '^xterm'
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
+
+
+
+" ############################# "
+" suffix section
+
+" disable autocomment-out of newlines
+" putting this at the end to avoid formatoptions resetting
+autocmd BufRead,BufNewFile,FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
