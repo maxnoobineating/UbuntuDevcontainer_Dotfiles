@@ -309,7 +309,7 @@ let &t_ZR="\e[23m"
 set background=dark
 let g:solarized_italic=1
 let g:solarzied_italic_comments=1
-" let g:solarized_contrast="high"
+let g:solarized_contrast="high"
 " let g:solarized_termcolors=256
 " let g:solarized_termtrans=1
 colorscheme solarized
