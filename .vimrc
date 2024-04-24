@@ -473,6 +473,9 @@ if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
     " In normal mode, 'DD' cuts the line and puts it in the system clipboard
     nnoremap DD "+dd
 else
+    " YDP store into vim unamed register, and vim-tmux-register plugin will sync them to tmux buffer
+    " you can go into tmux, <Leader>b to :show-buffer and copy it down (in windows terminal, Enter also copies)
+    " (because tmux select is recognized by the terminal unlike vim select)
     " echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
     " yanking to system clipboard
     vnoremap Y "0y
