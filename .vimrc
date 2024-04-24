@@ -1,5 +1,3 @@
-" setting vim default tag file
-set tags=/usr/local/bin/ctags
 
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
