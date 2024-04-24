@@ -253,7 +253,8 @@ call plug#begin('~/.vim/plugged')
 
 				Plug 'jiangmiao/auto-pairs'
 
-                Plug 'wakatime/vim-wakatime'
+                " requires API keys, or it'll neg you
+                " Plug 'wakatime/vim-wakatime'
 
                 Plug 'vim-scripts/TaskList.vim'
 
