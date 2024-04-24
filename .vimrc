@@ -317,6 +317,7 @@ let s:terminal_italic=1
 
 " Vim-airline-themes config
 let g:airline_theme='solarized'
+let g:airline_solarized_bg='light'
 " Enable tabline
 " let g:airline#extensions#tabline#enabled = 1
 " let g:airline_powerline_fonts = 1
