@@ -2,6 +2,9 @@
 For first setting up, run:
 `/bin/zsh <(curl -sSL https://gist.github.com/maxnoobineating/e42e875d0360dec9122ab5d088e66fd0.txt)`
 Somehow bash wouldn't let me run the script
+if automatic plugin installation isn't working in setup, try:
+- vim:      :PlugInstall
+- tmux:     <prefix> + I
 
 ## Introduction
 This technique allows you to store your dotfiles in a bare Git repository located in a "side" folder (like `$HOME/.cfg` or `$HOME/.myconfig`). A specially crafted alias is used to run commands against this repository instead of the usual `.git` local folder¹.
