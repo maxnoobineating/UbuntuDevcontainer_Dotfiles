@@ -273,7 +273,7 @@ call plug#begin('~/.vim/plugged')
                 " replaced by tagbar
                 Plug 'xolox/vim-easytags'
 
-                " Plug 'xolox/vim-misc'
+                Plug 'xolox/vim-misc'
 
                 " gcc comments
                 Plug 'tpope/vim-commentary'
