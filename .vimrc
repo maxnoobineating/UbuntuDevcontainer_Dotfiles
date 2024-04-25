@@ -1,3 +1,7 @@
+" setting combo key waiting time
+" (vim don't have combination key, it only wait a while for the potential squence
+" which led to a lot of keymapping causing laggy input)
+" set timeoutlen=300
 
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
@@ -58,7 +62,11 @@ set incsearch
 
 " Unbind some useless/annoying default key bindings.
 " 'Q' in normal mode enters Ex mode. You almost never want this.
-nmap Q <Nop>
+nmap Q <nop>
+
+" Disable accidental opening of command history, but this actually doesn't work, fk
+nnoremap q: <nop>
+cnoremap q: <nop>
 
 " Disable audible bell because it's annoying.
 set noerrorbells visualbell t_vb=
@@ -263,9 +271,9 @@ call plug#begin('~/.vim/plugged')
                 Plug 'majutsushi/tagbar'
 
                 " replaced by tagbar
-                " Plug 'xolox/vim-easytags'
+                Plug 'xolox/vim-easytags'
 
-                Plug 'xolox/vim-misc'
+                " Plug 'xolox/vim-misc'
 
                 " gcc comments
                 Plug 'tpope/vim-commentary'
@@ -287,7 +295,7 @@ call plug#begin('~/.vim/plugged')
                 " Plug 'altercation/vim-colors-solarized'
 
                 " gruvbox theme as plugin
-                Plug 'morhetz/gruvbox'
+                " Plug 'morhetz/gruvbox'
 
 call plug#end()
 
@@ -384,17 +392,27 @@ inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
 
 " Plugin mappings END
 
-
 filetype plugin indent on
 
 
 
-" -------- "
-" MAPPINGS "
-" -------- "
+" #===================================================================================#
+" Mappings
+
+" temporarily cancel all highlight from search, it'll come back on next search
+nnoremap <Leader>c :noh<CR>
+
+" search for selected text in visual mode
+" function! SelectionSearch() range
+"     normal! gvy: let@/ = @"<CR>
+"     " normal! :let @/ = @"<CR>
+"     " let @/ = @"
+" endfunction
+" vnoremap * :call SelectionSearch()<CR>
+vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
 
 " toggle number sidebar (for more easily tmux select)
-nnoremap <F2> :set number! relativenumber!<CR>
+nnoremap <f2> :set number! relativenumber!<CR>
 
 " openning register panel
 nnoremap <leader>r :reg<CR>
@@ -494,12 +512,13 @@ else
     nnoremap DD "0dd
 endif
 
-
 noremap - $
 
 " disable command-line window binding
-nnoremap q: <nop>
-cnoremap q: <nop>
+map q: <Nop>
+nnoremap q: <Nop>
+cnoremap q: <Nop>
+nnoremap Q <Nop>
 
 " insert mode add newline
 inoremap \\eo A<CR>
@@ -583,7 +602,7 @@ endtry
 endfunction
 com! ShowMaps call s:ShowMaps()      " Enable :ShowMaps to call the function
 
-nnoremap \m :ShowMaps<CR>
+nnoremap <Leader>m :ShowMaps<CR>
 
 " --------------------------------------------------------------------------------
 " --------------------------------------------------------------------------------
