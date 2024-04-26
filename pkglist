@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-# for installation purpose
-apt-get install sudo
-
-apt-get install
