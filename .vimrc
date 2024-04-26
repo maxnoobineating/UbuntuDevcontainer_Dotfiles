@@ -244,12 +244,13 @@ let g:ale_lint_on_text_changed = 'always'
 
 
 call plug#begin('~/.vim/plugged')
-
 				let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
-				if empty(glob(data_dir . '/autoload/plug.vim'))
-					silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-					autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-				endif
+                " Install vim-plug if not found
+                if empty(glob('~/.vim/autoload/plug.vim'))
+                  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+                    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+                endif
+
 				Plug 'mhinz/vim-startify'
 
                 Plug 'dense-analysis/ale'
@@ -296,6 +297,13 @@ call plug#begin('~/.vim/plugged')
 
                 " gruvbox theme as plugin
                 " Plug 'morhetz/gruvbox'
+
+
+                " Run PlugInstall if there are missing plugins
+                " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
+                autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
+                  \| PlugInstall --sync | source $MYVIMRC
+                \| endif
 
 call plug#end()
 
@@ -398,6 +406,10 @@ filetype plugin indent on
 
 " #===================================================================================#
 " Mappings
+
+"keep visual mode after indent
+vnoremap > >gv^
+vnoremap < <gv^
 
 " temporarily cancel all highlight from search, it'll come back on next search
 nnoremap <Leader>c :noh<CR>
@@ -596,8 +608,7 @@ try
   setlocal nomodifiable
 finally                              " Execute even if exception is raised
   call setreg("a", old_reg, old_reg_type) " restore register a
-
-	"trying to replace :q in the mapping pane with :bd | q for clearing buffer
+"trying to replace :q in the mapping pane with :bd | q for clearing buffer
 endtry
 endfunction
 com! ShowMaps call s:ShowMaps()      " Enable :ShowMaps to call the function
@@ -617,9 +628,7 @@ function! s:QLstop(pattern)
 		echoerr "End Of Recursive Macro"
   endif
 endfunction
-
 command! -nargs=1 QLstop call s:QLstop(<f-args>)
-
 
 " function! _test()
 "   let l:current_line = getline('.')
@@ -627,7 +636,6 @@ command! -nargs=1 QLstop call s:QLstop(<f-args>)
 " 		echoerr "End Of Recursive Macro"
 "   endif
 " endfunction
-
 
 " block cursor for windows terminal
 " https://github.com/microsoft/terminal/issues/4335
@@ -653,7 +661,6 @@ if &term =~ '^xterm'
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
-
 
 
 " ############################# "
