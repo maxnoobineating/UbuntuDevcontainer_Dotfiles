@@ -271,9 +271,6 @@ call plug#begin('~/.vim/plugged')
 
                 Plug 'majutsushi/tagbar'
 
-                " replaced by tagbar
-                Plug 'xolox/vim-easytags'
-
                 Plug 'xolox/vim-misc'
 
                 " gcc comments
@@ -529,7 +526,10 @@ let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to
 if executable(s:clip)
     augroup WSLYank
         autocmd!
-        autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+        " WSL
+        " autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+        " WSL2
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call system('cat |' . s:clip, @0) | endif
     augroup END
 endif
 
