@@ -272,7 +272,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'majutsushi/tagbar'
 
                 " replaced by tagbar
-                " Plug 'xolox/vim-easytags'
+                Plug 'xolox/vim-easytags'
 
                 Plug 'xolox/vim-misc'
 
@@ -539,6 +539,19 @@ if executable(s:clip)
         " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' | endif
     augroup END
 endi
+
+" WSL yank support
+let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+if executable(s:clip)
+    augroup WSLYank
+        autocmd!
+        " WSL
+        " autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+        " WSL2
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call system('cat |' . s:clip, @0) | endif
+    augroup END
+endif
+
 
 " matching 0 as line start, - as line end
 noremap - $
