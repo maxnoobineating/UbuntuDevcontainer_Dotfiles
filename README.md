@@ -6,6 +6,12 @@ if automatic plugin installation isn't working in setup, try:
 - vim:      :PlugInstall
 - tmux:     <prefix> + I
 
+
+https://stackoverflow.com/questions/75276760/git-fetch-remote-name-does-nothing-but-git-fetch-remote-url-fetches-the-cha
+Problem with local repo not having proper remote tracking branch:
+- Add `fetch = refs/heads/*:refs/remotes/origin/*` to ~/.cfg/config [branch "origin"]
+- `dotfile pull` resolving conflict if there's version mismatch
+
 ## Introduction
 This technique allows you to store your dotfiles in a bare Git repository located in a "side" folder (like `$HOME/.cfg` or `$HOME/.myconfig`). A specially crafted alias is used to run commands against this repository instead of the usual `.git` local folder¹.
 

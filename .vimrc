@@ -562,9 +562,9 @@ nnoremap q: <Nop>
 cnoremap q: <Nop>
 nnoremap Q <Nop>
 
-" " insert mode add newline
-inoremap <Esc>o <Esc>o
-inoremap <Esc>O <Esc>O
+" insert mode add newline, can't map <Esc>o/O because it'll interfere with insert arrow keys below
+inoremap ^]o <Esc>o
+inoremap ^]O <Esc>O
 
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
