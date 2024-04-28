@@ -272,7 +272,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'majutsushi/tagbar'
 
                 " replaced by tagbar
-                Plug 'xolox/vim-easytags'
+                " Plug 'xolox/vim-easytags'
 
                 Plug 'xolox/vim-misc'
 
@@ -298,6 +298,8 @@ call plug#begin('~/.vim/plugged')
                 " gruvbox theme as plugin
                 " Plug 'morhetz/gruvbox'
 
+                " ack cross file code search
+                Plug 'mileszs/ack.vim'
 
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
@@ -381,6 +383,8 @@ let g:airline_solarized_bg='light'
 " tagbar
 let g:tagbar_sort = 0
 nmap <F8> :TagbarToggle fjc<CR>
+" auto tags generation on save
+au BufWritePost * silent! !ctags -R &
 
 " NerdTree
 nnoremap <leader>n :NERDTreeFocus<CR>
@@ -430,7 +434,8 @@ nnoremap <f2> :set number! relativenumber!<CR>
 nnoremap <leader>r :reg<CR>
 
 " replace default gd behaviour (if you want highlighing word under cursor, use *)
-nnoremap gd <C-]>
+
+nnoremap <expr> gd getline('.')[col('.') - 1 : col('.') + len(@/) - 2] == @/ ? "*<C-]>" : "*<C-]>n"
 
 nnoremap o o<Esc>
 nnoremap O O<Esc>
@@ -523,7 +528,19 @@ else
     vnoremap D "0x
     nnoremap DD "0dd
 endif
+" yank to win32/clip.exe
+" WSL yank support, need vim to have TexYankPost event
+let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+if executable(s:clip)
+    augroup if exists("##TextYankPost") WSLYank
+        autocmd!
+        " =~# for input pattern matching, ==# for exact matching
+        autocmd TextYankPost * if v:event.operator =~# 'y' | call system(s:clip, @0) | endif
+        " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' | endif
+    augroup END
+endi
 
+" matching 0 as line start, - as line end
 noremap - $
 
 " disable command-line window binding
@@ -532,10 +549,9 @@ nnoremap q: <Nop>
 cnoremap q: <Nop>
 nnoremap Q <Nop>
 
-" insert mode add newline
-inoremap \\eo A<CR>
-inoremap \\eO I<CR>k
-
+" " insert mode add newline
+inoremap <Esc>o <Esc>o
+inoremap <Esc>O <Esc>O
 
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
