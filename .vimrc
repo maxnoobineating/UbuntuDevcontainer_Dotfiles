@@ -530,7 +530,7 @@ else
 endif
 " yank to win32/clip.exe
 " WSL yank support, need vim to have TexYankPost event
-let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+" let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
 if executable(s:clip)
     augroup if exists("##TextYankPost") WSLYank
         autocmd!
@@ -538,7 +538,7 @@ if executable(s:clip)
         autocmd TextYankPost * if v:event.operator =~# 'y' | call system(s:clip, @0) | endif
         " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' | endif
     augroup END
-endi
+endif
 
 " WSL yank support
 let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
