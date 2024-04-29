@@ -535,14 +535,13 @@ endif
 
 " custom host yank support
 let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
-if exists(s:clipboard_export)
+if filereadable(s:clipboard_export)
     augroup WSLYank
         autocmd!
         " WSL
-        autocmd TextYankPost *
-            if v:event.operator ==# 'y'
-                call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export)
-            endif
+        " autocmd TextYankPost * if v:event.operator ==# 'y' | call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export) | endif
+        autocmd TextYankPost * if v:event.operator =~# 'y' | call system('echo ' . shellescape(substitute(@0, '\n$', '', '')) . ' > ' . s:clipboard_export) | endif
+        " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' . s:clipboard_export | endif
     augroup END
 endif
 
