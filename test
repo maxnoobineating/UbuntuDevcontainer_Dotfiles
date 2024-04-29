@@ -1,0 +1,1 @@
+                call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export)

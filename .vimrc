@@ -272,7 +272,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'majutsushi/tagbar'
 
                 " replaced by tagbar
-                Plug 'xolox/vim-easytags'
+                " Plug 'xolox/vim-easytags'
 
                 Plug 'xolox/vim-misc'
 
@@ -290,7 +290,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'vim-airline/vim-airline-themes'
 
                 " for dealing with vim swapfile warning shenanigans
-                Plug 'gioele/vim-autoswap'
+                " Plug 'gioele/vim-autoswap'
 
                 " for solarized theme as plugin
                 " Plug 'altercation/vim-colors-solarized'
@@ -299,7 +299,7 @@ call plug#begin('~/.vim/plugged')
                 " Plug 'morhetz/gruvbox'
 
                 " ack cross file code search
-                Plug 'mileszs/ack.vim'
+                " Plug 'mileszs/ack.vim'
 
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
@@ -384,7 +384,11 @@ let g:airline_solarized_bg='light'
 let g:tagbar_sort = 0
 nmap <F8> :TagbarToggle fjc<CR>
 " auto tags generation on save
-au BufWritePost * silent! !ctags -R &
+augroup CTagGeneration
+    autocmd!
+    au BufWritePost * silent! call system('ctags ' . expand('%:p') . '2>&1 >/dev/null &')
+    " au BufWinEnter *  expend('%:p')
+augroup END
 
 " NerdTree
 nnoremap <leader>n :NERDTreeFocus<CR>
@@ -528,27 +532,17 @@ else
     vnoremap D "0x
     nnoremap DD "0dd
 endif
-" yank to win32/clip.exe
-" WSL yank support, need vim to have TexYankPost event
-" let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
-if executable(s:clip)
-    augroup if exists("##TextYankPost") WSLYank
-        autocmd!
-        " =~# for input pattern matching, ==# for exact matching
-        autocmd TextYankPost * if v:event.operator =~# 'y' | call system(s:clip, @0) | endif
-        " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' | endif
-    augroup END
-endif
 
-" WSL yank support
-let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
-if executable(s:clip)
+" custom host yank support
+let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
+if exists(s:clipboard_export)
     augroup WSLYank
         autocmd!
         " WSL
-        " autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
-        " WSL2
-        autocmd TextYankPost * if v:event.operator ==# 'y' | call system('cat |' . s:clip, @0) | endif
+        autocmd TextYankPost *
+            if v:event.operator ==# 'y'
+                call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export)
+            endif
     augroup END
 endif
 
