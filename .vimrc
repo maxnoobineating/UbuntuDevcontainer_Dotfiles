@@ -75,6 +75,11 @@ set noerrorbells visualbell t_vb=
 " sometimes be convenient.
 set mouse+=a
 
+" autoindentation
+" set autoindent
+" set smartindent <- not working with python?
+filetype plugin indent on
+set cindent
 
 " An example for a vimrc file.
 "
@@ -233,15 +238,8 @@ if has("autocmd")
 	autocmd BufNewFile,BufRead *.md setlocal filetype=markdown
 endif
 
-
-let g:ale_disable_lsp = 1
-let g:ale_linters_explicit = 1
-let g:ale_linters = {'javascript': [], 'python': ['flake8'], 'rust': [], 'go': [], 'bash': ['shellcheck'], 'sh': ['shellcheck'], 'tex': ['chktex']}
-let g:ale_fixers = {'bash': ['shfmt'], 'sh': ['shfmt']}
-let g:ale_sign_error = '>>'
-let g:ale_sign_warning = '--'
-let g:ale_lint_on_text_changed = 'always'
-
+" =============================================================================================
+" Plugins Installation
 
 call plug#begin('~/.vim/plugged')
 				let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
@@ -301,10 +299,13 @@ call plug#begin('~/.vim/plugged')
                 " ack cross file code search
                 " Plug 'mileszs/ack.vim'
 
+                " indent indication
+                Plug 'yggdroot/indentline'
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
-                  \| PlugInstall --sync | source $MYVIMRC
+                \| PlugInstall --sync | source $MYVIMRC
                 \| endif
 
 call plug#end()
@@ -312,6 +313,27 @@ call plug#end()
 
 " ############################# "
 " Plugin mapping & configuration:
+
+" ALE linter setting
+let g:ale_disable_lsp = 1
+let g:ale_linters_explicit = 1
+let g:ale_linters = {'javascript': [], 'python': ['flake8'], 'rust': [], 'go': [], 'bash': ['shellcheck'], 'sh': ['shellcheck'], 'tex': ['chktex']}
+let g:ale_fixers = {'bash': ['shfmt'], 'sh': ['shfmt']}
+let g:ale_sign_error = '>>'
+let g:ale_sign_warning = '--'
+let g:ale_lint_on_text_changed = 'always'
+
+" indentline config
+" let g:indentLine_setColors = 0
+" Vim
+let g:indentLine_color_term = 249
+" GVim
+" let g:indentLine_color_gui = '#B2B2B2'
+let g:indentLine_char = '┊'
+" none X terminal
+let g:indentLine_color_tty_light = 0 " (default: 4)
+let g:indentLine_color_dark = 5 " (default: 2)
+                        " asdada
 
 " vim-autoswap config for tmux
 let g:autoswap_detect_tmux=1
@@ -400,11 +422,24 @@ autocmd BufWinEnter,SourcePost * silent! :%foldopen!
 set foldlevelstart=3
 
 " Coc.vim completion binding
-" Enter confirm
-inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
+" https://github.com/neoclide/coc.nvim/wiki/Completion-with-sources#use-tab-or-custom-key-for-trigger-completion
+" Enter confirm with other wise formatted <CR>
+" inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
+inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 " tab S-tab navigate
-inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
-inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
+" inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
+" inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
+" tab triggering completion
+" use <tab> to trigger completion and navigate to the next complete item
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+inoremap <silent><expr> <Tab>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
 " Plugin mappings END
 
@@ -441,8 +476,8 @@ nnoremap <leader>r :reg<CR>
 
 nnoremap <expr> gd getline('.')[col('.') - 1 : col('.') + len(@/) - 2] == @/ ? "*<C-]>" : "*<C-]>n"
 
-nnoremap o o<Esc>
-nnoremap O O<Esc>
+nnoremap o o<Esc>==
+nnoremap O O<Esc>==
 
 cmap w!! w !sudo tee % > /dev/null
 
