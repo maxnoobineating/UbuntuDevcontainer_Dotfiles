@@ -1,6 +1,5 @@
-" coc-settings.json
 {
-    "suggest.enablePreselect": false,
     "suggest.noselect": true,
-    "diagnostic.checkCurrentLine": true
+    "diagnostic.checkCurrentLine": true,
+    "python.jediEnabled": false
 }

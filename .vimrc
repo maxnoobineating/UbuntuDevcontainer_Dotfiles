@@ -302,6 +302,9 @@ call plug#begin('~/.vim/plugged')
                 " indent indication
                 Plug 'yggdroot/indentline'
 
+                " better python syntax highlighting
+                Plug 'vim-python/python-syntax'
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -314,14 +317,19 @@ call plug#end()
 " ############################# "
 " Plugin mapping & configuration:
 
+" vim-python
+let g:python_highlight_all = 1
+
 " ALE linter setting
-let g:ale_disable_lsp = 1
-let g:ale_linters_explicit = 1
+" let g:ale_disable_lsp = 1
+" 1 for enabling all linters
+let g:ale_linters_explicit = 0
 let g:ale_linters = {'javascript': [], 'python': ['flake8'], 'rust': [], 'go': [], 'bash': ['shellcheck'], 'sh': ['shellcheck'], 'tex': ['chktex']}
-let g:ale_fixers = {'bash': ['shfmt'], 'sh': ['shfmt']}
+let g:ale_fixers = {'bash': ['shfmt'], 'sh': ['shfmt'], 'python': ['autoflake']}
 let g:ale_sign_error = '>>'
 let g:ale_sign_warning = '--'
 let g:ale_lint_on_text_changed = 'always'
+
 
 " indentline config
 " let g:indentLine_setColors = 0
@@ -360,48 +368,12 @@ let g:airline_solarized_bg='light'
 " Enable tabline
 " let g:airline#extensions#tabline#enabled = 1
 " let g:airline_powerline_fonts = 1
-" #############################
-" fall-back unicode font setting
-  " if !exists('g:airline_symbols')
-  "   let g:airline_symbols = {}
-  " endif
 
-  " " unicode symbols
-  " let g:airline_left_sep = '»' 
-  " let g:airline_left_sep = '▶'
-  " let g:airline_right_sep = '«'
-  " let g:airline_right_sep = '◀'
-  " let g:airline_symbols.colnr = ' ㏇:'
-  " let g:airline_symbols.colnr = ' ℅:'
-  " let g:airline_symbols.crypt = '🔒'
-  " let g:airline_symbols.linenr = '☰'
-  " let g:airline_symbols.linenr = ' ␊:'
-  " let g:airline_symbols.linenr = ' ␤:'
-  " let g:airline_symbols.linenr = '¶'
-  " let g:airline_symbols.maxlinenr = ''
-  " let g:airline_symbols.maxlinenr = '㏑'
-  " let g:airline_symbols.branch = '⎇'
-  " let g:airline_symbols.paste = 'ρ'
-  " let g:airline_symbols.paste = 'Þ'
-  " let g:airline_symbols.paste = '∥'
-  " let g:airline_symbols.spell = 'Ꞩ'
-  " let g:airline_symbols.notexists = 'Ɇ'
-  " let g:airline_symbols.notexists = '∄'
-  " let g:airline_symbols.whitespace = 'Ξ'
+" airline + tagbar integration
+let g:airline#extensions#tagbar#enabled = 1
+let g:airline#extensions#tagbar#flags = 'f'
 
-  " " powerline symbols
-  " let g:airline_left_sep = ''
-  " let g:airline_left_alt_sep = ''
-  " let g:airline_right_sep = ''
-  " let g:airline_right_alt_sep = ''
-  " let g:airline_symbols.branch = ''
-  " let g:airline_symbols.colnr = ' ℅:'
-  " let g:airline_symbols.readonly = ''
-  " let g:airline_symbols.linenr = ' :'
-  " let g:airline_symbols.maxlinenr = '☰ '
-  " let g:airline_symbols.dirty='⚡'
-" #############################
-
+" =======================================================================================================
 " tagbar
 let g:tagbar_sort = 0
 nmap <F8> :TagbarToggle fjc<CR>
@@ -411,21 +383,77 @@ augroup CTagGeneration
     au BufWritePost * silent! call system('ctags ' . expand('%:p') . '2>&1 >/dev/null &')
     " au BufWinEnter *  expend('%:p')
 augroup END
+nmap <leader>f :TagbarJumpNext<CR>
+nmap <leader>F :TagbarJumpPrev<CR>
 
+" =======================================================================================================
 " NerdTree
 nnoremap <leader>n :NERDTreeFocus<CR>
 
+" =======================================================================================================
 " Easyfold, unfold all after fold creation (every new session)
 " adding SourcePost event because certain .vim file will ignore foldopen when sourcing ~/.vimrc
 autocmd BufWinEnter,SourcePost * silent! :%foldopen!
 " set initial maximum nested folding level (only fold if nested over several level), just in case
 set foldlevelstart=3
 
-" Coc.vim completion binding
+" =======================================================================================================
+" Coc.nvim
+" config
+let g:coc_global_extensions = [
+\ 'coc-pyright',
+\ 'coc-json'
+\ ]
+let g:coc_start_at_startup = 1
+set updatetime=300
+" preventing error signs shifting sidebar (can still be disabled by f2)
+set signcolumn=yes
+autocmd CursorHold * silent call CocActionAsync('highlight')
+" mappings
+" navigate coc linter message
+nmap <silent> <C-j> <Plug>(coc-diagnostic-next-error)
+nmap <silent> <C-k> <Plug>(coc-diagnostic-prev-error)
+" " opening :CocList diagnostic
+" function! s:Err()
+"     CocList diagnostics
+" endfunction
+" com! Err call s:Err()      " Enable :ShowMaps to call the function
+" nnoremap <expr> <Leader>e :CocE<CR>
+" nnoremap <leader>e <Plug>(coc-diagnostic-info)
+nnoremap <leader>e :call CocAction('diagnosticToggle')<CR>
+" Formatting selected code
+" xmap <leader>f  <Plug>(coc-format-selected)
+" nmap <leader>f  <Plug>(coc-format-selected)
+
+augroup Cocgroup
+  autocmd!
+  " Setup formatexpr specified filetype(s)
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+augroup end
+" GoTo code navigation
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+" auto rename
+nmap <leader>rn <Plug>(coc-rename)
+" Use K to show documentation in preview window
+nnoremap <silent> <leader>d :call ShowDocumentation()<CR>
+
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
+" Tab Completion binding
 " https://github.com/neoclide/coc.nvim/wiki/Completion-with-sources#use-tab-or-custom-key-for-trigger-completion
 " Enter confirm with other wise formatted <CR>
 " inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
-inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#_select_confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 " tab S-tab navigate
 " inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
 " inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
@@ -442,6 +470,7 @@ inoremap <silent><expr> <Tab>
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
 " Plugin mappings END
+" =======================================================================================================
 
 filetype plugin indent on
 
@@ -450,12 +479,25 @@ filetype plugin indent on
 " #===================================================================================#
 " Mappings
 
+" remap capital HJKL to prevent accidental trigger
+noremap <leader>j J
+noremap <leader>k K
+noremap L <nop>
+noremap H <nop>
+" to the first line of current context window
+nnoremap K :TagbarJumpPrev<CR>
+" to the last Line of current context window
+nnoremap J :TagbarJumpNext<CR>
+" preventing V > J/K accidentally trigger mappings
+xnoremap <nowait> J j
+xnoremap <nowait> K k
+
 "keep visual mode after indent
 vnoremap > >gv^
 vnoremap < <gv^
 
 " temporarily cancel all highlight from search, it'll come back on next search
-nnoremap <Leader>c :noh<CR>
+nnoremap <Leader>v :noh<CR>
 
 " search for selected text in visual mode
 " function! SelectionSearch() range
@@ -467,14 +509,16 @@ nnoremap <Leader>c :noh<CR>
 vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
 
 " toggle number sidebar (for more easily tmux select)
-nnoremap <f2> :set number! relativenumber!<CR>
+let g:signcolumn_toggle_state = 'no'
+" nnoremap <expr> <f2> ":set number! relativenumber!"
+nnoremap <expr> <f2> &signcolumn == 'yes' ? ":set signcolumn=no number! relativenumber!<CR>" : ":set signcolumn=yes number! relativenumber!<CR>"
 
 " openning register panel
 nnoremap <leader>r :reg<CR>
 
 " replace default gd behaviour (if you want highlighing word under cursor, use *)
-
-nnoremap <expr> gd getline('.')[col('.') - 1 : col('.') + len(@/) - 2] == @/ ? "*<C-]>" : "*<C-]>n"
+" !replaced by coc-definition
+" nnoremap <expr> gd getline('.')[col('.') - 2 : col('.') + len(@/) - 2] == @/ ? "*<C-]>" : "*<C-]>n"
 
 nnoremap o o<Esc>==
 nnoremap O O<Esc>==
@@ -487,16 +531,6 @@ cmap w!! w !sudo tee % > /dev/null
 " pasting terminal command history
 command -nargs=* Histps read !history | cut -f4- -d' ' <args>
 
-" navigate coc linter message
-nmap <silent> <C-j> <Plug>(coc-diagnostic-next-error)
-nmap <silent> <C-k> <Plug>(coc-diagnostic-prev-error)
-" opening :CocList diagnostic
-function! s:Err()
-    CocList diagnostics
-endfunction
-com! Err call s:Err()      " Enable :ShowMaps to call the function
-
-nnoremap <Leader>e :Err<CR>
 
 
 " cursor position helper
@@ -519,8 +553,12 @@ function! IsCursorAtLastWord()
     return l:end_of_word_line == l:end_of_line_line
 endfunction
 
-function! IsCurosrAtStart()
+function! IsCursorAtStart()
     return col('.') == 1
+endfunction
+
+function! IsCursorAtEnd()
+    return col('.') == col('$')
 endfunction
 
 " System call for state checking
@@ -585,14 +623,14 @@ endif
 noremap - $
 
 " disable command-line window binding
-map q: <Nop>
-nnoremap q: <Nop>
-cnoremap q: <Nop>
+map <nowait> q: <Nop>
+nnoremap <nowait> q: <Nop>
+cnoremap <nowait> q: <Nop>
 nnoremap Q <Nop>
 
 " insert mode add newline, can't map <Esc>o/O because it'll interfere with insert arrow keys below
-inoremap ^]o <Esc>o
-inoremap ^]O <Esc>O
+inoremap <nowait> ^]o <Esc>o
+inoremap <nowait> ^]O <Esc>O
 
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
@@ -608,13 +646,14 @@ nnoremap <Down> j
 nnoremap <expr> <Left> col(".") == 1 ? "k$" : "h"
 nnoremap <expr> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == col("$") ? "j0" : "l"
 
+" inoremap <expr> <C-L> IsCursorAtEnd() ? "<Cmd>echo 'true'<CR> " : "<Cmd>echo 'false'<CR>"
 " insert mode delete until word end
-inoremap <C-e> <Esc>ldei
-" insert mode delete until word begining (includes words on cursor)
-inoremap <C-b> <Esc>lxdbi
+inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" : "<Esc>lce"
+" insert mode delete until word begining (excludes current cursor)
+inoremap <expr> <C-b> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
-inoremap <expr> <C-c> IsCurosrAtStart() ? "<Esc>viwdi" : "<Esc>lviwdi"
+inoremap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
 nnoremap <C-c> viwc
@@ -626,6 +665,7 @@ nnoremap <C-D> viwd
 " insert mode indent
 inoremap <C-\> <C-T>
 " insert mode deindent
+" don't bind <C-[>, it'll capture any escape sequence and you can never leave insert mode...
 inoremap <C-]> <C-D>
 " insert mode keyword completion replace C-p with C -m
 " inoremap <C-m> <C-p>
