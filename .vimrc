@@ -1,3 +1,6 @@
+" popup menu settings
+set pumheight=4
+
 " setting combo key waiting time
 " (vim don't have combination key, it only wait a while for the potential squence
 " which led to a lot of keymapping causing laggy input)
@@ -305,6 +308,12 @@ call plug#begin('~/.vim/plugged')
                 " better python syntax highlighting
                 Plug 'vim-python/python-syntax'
 
+                " color representation of color code
+                Plug 'ap/vim-css-color'
+
+                " color table viewer, :XtermColorTable
+                Plug 'guns/xterm-color-table.vim'
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -400,6 +409,8 @@ set foldlevelstart=3
 " =======================================================================================================
 " Coc.nvim
 " config
+" set selection highlight
+hi CocMenuSel ctermbg=darkgrey
 let g:coc_global_extensions = [
 \ 'coc-pyright',
 \ 'coc-json'
@@ -421,9 +432,6 @@ nmap <silent> <C-k> <Plug>(coc-diagnostic-prev-error)
 " nnoremap <expr> <Leader>e :CocE<CR>
 " nnoremap <leader>e <Plug>(coc-diagnostic-info)
 nnoremap <leader>e :call CocAction('diagnosticToggle')<CR>
-" Formatting selected code
-" xmap <leader>f  <Plug>(coc-format-selected)
-" nmap <leader>f  <Plug>(coc-format-selected)
 
 augroup Cocgroup
   autocmd!
@@ -439,6 +447,10 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 " auto rename
 nmap <leader>rn <Plug>(coc-rename)
+" auto formatting
+nnoremap <leader>af <plug>(coc-format-selected)
+vnoremap <leader>af <plug>(coc-format-selected)
+
 " Use K to show documentation in preview window
 nnoremap <silent> <leader>d :call ShowDocumentation()<CR>
 
@@ -463,11 +475,39 @@ function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
+function! ScrollAndNext()
+  call coc#pum#next(1)
+  call coc#pum#scroll(1)
+endfunction f0
 inoremap <silent><expr> <Tab>
-      \ coc#pum#visible() ? coc#pum#next(1) :
-      \ CheckBackspace() ? "\<Tab>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+    \ coc#pum#visible() ?
+        \ coc#pum#next(1) :
+        \ (CheckBackspace() ?
+            \ "\<Tab>" :
+            \ coc#refresh())
+" inoremap <silent><expr> <Tab>
+"       \ coc#pum#visible() ?
+"           \ (coc#float#has_scroll() ?
+"                 \ ScrollAndNext() :
+"                 \ coc#pum#next(1)) :
+"           \ (CheckBackspace() ?
+"                 \ "\<Tab>" :
+"                 \ coc#refresh())
+
+function! ScrollAndPrev()
+  call coc#pum#prev(1)
+  call coc#pum#scroll(0)
+endfunction end
+inoremap <expr><S-TAB> 
+    \ coc#pum#visible() ?
+        \ coc#pum#prev(1) :
+        \ "\<C-h>"
+" inoremap <expr><S-TAB> 
+"     \ coc#pum#visible() ?
+"         \ (coc#float#has_scroll() ?
+"             \ ScrollAndPrev()
+"             \ : coc#pum#prev(1))
+"         \ : "\<C-h>"
 
 " Plugin mappings END
 " =======================================================================================================
@@ -478,6 +518,7 @@ filetype plugin indent on
 
 " #===================================================================================#
 " Mappings
+
 
 " remap capital HJKL to prevent accidental trigger
 noremap <leader>j J
@@ -582,9 +623,15 @@ if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
     vnoremap Y "+y
     noremap YY "+yy
 
-    noremap P "+p
-    vnoremap P d"+p
-    "
+    noremap p gp
+    noremap P "+gp
+    noremap gp p
+    noremap gP "+p
+    vnoremap gP "+P
+    " pls reserve mp for this
+    vnoremap p mpgPv`po
+    vnoremap P mp"+gPv`po
+
     " In visual mode, 'D' cuts the selection and puts it in the system clipboard
     vnoremap D "+x
     " In normal mode, 'DD' cuts the line and puts it in the system clipboard
@@ -598,9 +645,17 @@ else
     vnoremap Y "0y
     noremap YY "0yy
 
-    noremap P "0p
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
-    vnoremap P "0P
+    " visual mode paste should select the pasted content
+    " first, fix cursor position after paste (default is - to the end if pasting no linebreak, to the begining of the next line if pasting linebreaks)
+    noremap p gp
+    noremap P "0gp
+    noremap gp p
+    noremap gP "0p
+    vnoremap gP "0P
+    " pls reserve mp for this
+    vnoremap p mpgPv`po
+    vnoremap P mp"0gPv`po
 
     vnoremap D "0x
     nnoremap DD "0dd
@@ -685,6 +740,9 @@ vnoremap <C-n> vh//<CR>vh//e<CR>
 
 " :reload vim
 command Reload source ~/.vimrc
+
+" openup the full highlight document
+command Highlight so $VIMRUNTIME/syntax/hitest.vim
 
 " --------------------------------------------------------------------------------
 " alternative to map search hk: <\m>

@@ -1,5 +1,7 @@
 {
     "suggest.noselect": true,
     "diagnostic.checkCurrentLine": true,
-    "python.jediEnabled": false
+    "python.jediEnabled": false,
+    "suggest.floatConfig": {},
+    "colors.enable": true
 }
