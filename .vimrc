@@ -509,6 +509,14 @@ inoremap <expr><S-TAB>
 "             \ : coc#pum#prev(1))
 "         \ : "\<C-h>"
 
+" Vim Surrounds
+" let b:surround_{char2nr('.')} = "<.>\r</.>"
+" let b:surround_{char2nr(',')} = "<,>\r</,>"
+" let b:surround_{char2nr('-')} = "<->\r</->"
+" let b:surround_{char2nr('_')} = "<_>\r</_>"
+" let b:surround_{char2nr('/')} = "</>\r</>"
+" let b:surround_{char2nr('\')} = "</>\r</>"
+
 " Plugin mappings END
 " =======================================================================================================
 
@@ -518,6 +526,52 @@ filetype plugin indent on
 
 " #===================================================================================#
 " Mappings
+
+" select around symbols
+vnoremap i, t,oT,o
+vnoremap a, f,oF,o
+vnoremap i. t.oT.o
+vnoremap a. f.oF.o
+vnoremap i_ t_oT_o
+vnoremap a_ f_oF_o
+vnoremap i- t-oT-o
+vnoremap a- f-oF-o
+vnoremap i/ t/oT/o
+vnoremap a/ f/oF/o
+vnoremap i\ t\oT\o
+vnoremap a\ f\oF\o
+
+" C-u C-r in insert mode for undo/redo
+inoremap <C-u> <C-o>u
+inoremap <C-r> <C-o><C-r>
+
+" change 'w' word motion behaviour to excludes '_'
+function! CustomWordMotion(cmd)
+    let old_iskeyword=&iskeyword
+    set iskeyword-=_
+    execute "normal! " . a:cmd
+    let &iskeyword=old_iskeyword
+endfunction
+
+nnoremap w :call CustomWordMotion('w')<CR>
+nnoremap daw :call CustomWordMotion('daw')<CR>
+nnoremap diw :call CustomWordMotion('diw')<CR>
+" use visual mode to change word is because command will exit insert mode
+" recursively linked to aw/iw below
+nmap caw vawc
+nmap ciw viwc
+nmap cw viwc
+vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
+vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
+" 'W' inplace of the original 'w' (original 'W' is everything but whitespace, quite useless)
+nnoremap W w
+nnoremap daW daw
+nnoremap diW diw
+nnoremap caW caw
+nnoremap ciW ciw
+nnoremap cW viwc
+vnoremap aW aw
+vnoremap iW iw
 
 
 " remap capital HJKL to prevent accidental trigger
@@ -708,13 +762,15 @@ inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" 
 inoremap <expr> <C-b> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
-inoremap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
+imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
+imap <expr> <C-s> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
-nnoremap <C-c> viwc
+nmap <C-s> viwc
+nmap <C-c> viWc
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
-nnoremap <C-D> viwd
+nmap <C-D> viwd
 
 
 " insert mode indent
