@@ -456,7 +456,7 @@ nnoremap <silent> <leader>d :call ShowDocumentation()<CR>
 
 function! ShowDocumentation()
   if CocAction('hasProvider', 'hover')
-    call CocActionAsync('doHover')
+    call CocActionAsync('doloher')
   else
     call feedkeys('K', 'in')
   endif
@@ -527,8 +527,24 @@ filetype plugin indent on
 " #===================================================================================#
 " Mappings
 
+" visual to the end don't enclude newline
+vnoremap _ $
+vnoremap - $h
+
+" two way expansion of visual selection
+vnoremap L <Esc>`<v`>loho
+vnoremap H <Esc>`<v`>holo
+
+" function! SearchInVisualRange()
+"     '<,'>s/\(^.*;\)\|\(.*$;\)/\1\2/g
+" endfunction
+" vnoremap <leader>s :call SearchInVisualRange()<CR>
+
+" (asdadasd, asdasdsaad; asdadasdasdasda, asdasdasda)
+" select field separated by ,/; inside bracket
+
 " select around symbols
-vnoremap i, t,oT,o
+vnoremap i, t,ot,o
 vnoremap a, f,oF,o
 vnoremap i. t.oT.o
 vnoremap a. f.oF.o
@@ -577,8 +593,6 @@ vnoremap iW iw
 " remap capital HJKL to prevent accidental trigger
 noremap <leader>j J
 noremap <leader>k K
-noremap L <nop>
-noremap H <nop>
 " to the first line of current context window
 nnoremap K :TagbarJumpPrev<CR>
 " to the last Line of current context window
@@ -586,6 +600,9 @@ nnoremap J :TagbarJumpNext<CR>
 " preventing V > J/K accidentally trigger mappings
 xnoremap <nowait> J j
 xnoremap <nowait> K k
+" H/L for navigating sentences '(' ')'
+nnoremap H (
+nnoremap L )
 
 "keep visual mode after indent
 vnoremap > >gv^
@@ -729,7 +746,9 @@ endif
 
 
 " matching 0 as line start, - as line end
-noremap - $
+nnoremap - $
+" operator pending mode
+onoremap - $
 
 " disable command-line window binding
 map <nowait> q: <Nop>
