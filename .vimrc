@@ -150,6 +150,7 @@ set backspace=indent,eol,start
 " Optimize for fast terminal connections
 set ttyfast
 " Add the g flag to search/replace by default
+" warning: with this, replacement option g will toggle off global...
 set gdefault
 " Use UTF-8 without BOM
 set encoding=utf-8 nobomb
@@ -219,7 +220,7 @@ endif
 " Start scrolling three lines before the horizontal window border
 set scrolloff=3
 
-" Strip trailing whitespace (,ss)
+" Strip trailing whitespace (,sw)
 function! StripWhitespace()
 	let save_cursor = getpos(".")
 	let old_query = getreg('/')
@@ -227,7 +228,7 @@ function! StripWhitespace()
 	call setpos('.', save_cursor)
 	call setreg('/', old_query)
 endfunction
-noremap <leader>ss :call StripWhitespace()<CR>
+noremap <leader>sw :call StripWhitespace()<CR>
 " Save a file as root (,W)
 noremap <leader>W :w !sudo tee % > /dev/null<CR>
 
@@ -478,36 +479,29 @@ endfunction
 function! ScrollAndNext()
   call coc#pum#next(1)
   call coc#pum#scroll(1)
-endfunction f0
-inoremap <silent><expr> <Tab>
+endfunction
+" inoremap <silent><expr> <Tab>
+"     \ coc#pum#visible() ?
+"         \ coc#pum#next(1) :
+"         \ (CheckBackspace() ?
+"             \ "\<Tab>" :
+"             \ coc#refresh())
+inoremap <silent><expr> <Plug>CocNextCompletionCustom
     \ coc#pum#visible() ?
         \ coc#pum#next(1) :
         \ (CheckBackspace() ?
             \ "\<Tab>" :
             \ coc#refresh())
-" inoremap <silent><expr> <Tab>
-"       \ coc#pum#visible() ?
-"           \ (coc#float#has_scroll() ?
-"                 \ ScrollAndNext() :
-"                 \ coc#pum#next(1)) :
-"           \ (CheckBackspace() ?
-"                 \ "\<Tab>" :
-"                 \ coc#refresh())
+inoremap <Tab> <Plug>CocNextCompletionCustom
 
 function! ScrollAndPrev()
   call coc#pum#prev(1)
   call coc#pum#scroll(0)
-endfunction end
-inoremap <expr><S-TAB> 
+endfunction
+inoremap <silent><expr> <S-TAB> 
     \ coc#pum#visible() ?
         \ coc#pum#prev(1) :
         \ "\<C-h>"
-" inoremap <expr><S-TAB> 
-"     \ coc#pum#visible() ?
-"         \ (coc#float#has_scroll() ?
-"             \ ScrollAndPrev()
-"             \ : coc#pum#prev(1))
-"         \ : "\<C-h>"
 
 " Vim Surrounds
 " let b:surround_{char2nr('.')} = "<.>\r</.>"
@@ -525,7 +519,75 @@ filetype plugin indent on
 
 
 " #===================================================================================#
-" Mappings
+" Keybinding Mappings
+" <C-h>/<C-l> replacing non-whitespace jump B/W
+nnoremap <C-l> W
+nnoremap <C-h> B
+
+" crude auto indent
+imap <expr> <Tab> (col('.') == 1) && (getline(line('.')-1) != '') ? '<C-w><CR>' : '<Plug>CocNextCompletionCustom'
+
+" undo line with <leader>ul
+nnoremap <leader>ul U
+nnoremap U <C-r>
+
+" search pattern pre-fill
+noremap ;; :%s:::cg<Left><Left><Left>
+noremap ;' :.s:::cg<Left><Left><Left>
+
+" selection replacement
+function! ReplaceWithInput()
+    " put cursor on the head of matched pattern
+    call search(@h, 'bc')
+    let l:cuscol = col('.')
+    let l:cusline = line('.')
+    let l:text = input('Enter replacement text: ')
+    let l:old_pattern = getreg('h')
+    execute '.,$s/' . '\%>' . (l:cuscol-1) . 'c' . l:old_pattern . '/' . l:text . '/c'
+    silent! execute '1,' . l:cusline . 's/' . l:old_pattern . '\%<' . l:cuscol . 'c/' . l:text . '/c'
+endfunction
+vnoremap <C-r> "hy:<C-u>call replacewithinput()<CR>
+" if cursor on top of match highlights, enter replacing commands
+function! IsOnMatch()
+    " n: nojump, c: include first char of match, b: search behind
+    " backward search (b) until the first matching head ( works for cursor on the match and on the match head (c) )
+    let l:matchstart = searchpos(@/, 'Wncb')
+    " forward search until the first matching tail (e), including cursor on tail (c)
+    let l:matchend = searchpos(@/, 'Wnce')
+    let l:matchnext = searchpos(@/, 'wnc')
+    if (l:matchstart[0] != 0) && (l:matchend[0] != 0)
+    return ((l:matchend[1] < l:matchnext[1]) || (l:matchnext[1] <= l:matchstart[1])) && (l:matchstart[0] == l:matchend[0])
+endif
+return 0
+" return (col('.') < ( l:matchpos[1] + l:matchlen )) && (line('.') == l:matchpos[0])
+endfunction
+" nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
+" matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
+nnoremap <expr> <C-r> IsOnMatch() ? ':let @h=@/<CR>:call ReplaceWithInput()<CR>' : '<C-r>'
+
+" select field separated by ,/;(){}[]<>
+function! SepHLSearch()
+    let [_, l:startLine, l:startCol, _] = getcharpos("'<")
+    let [_, l:endLine, l:endCol, _] = getcharpos("'>")
+    " let @/ = '\%' . l:startLine . 'l\%>' . (l:startCol-1) . 'c\_[^,(){}\[\]><+-*/; \t\n\r]\+' . '\%' . l:endLine . 'l\%<' . (l:endCol+2) . 'c'
+    " let @/ = '\%>' . (l:startLine-1) . 'l\%>' . (l:startCol-1) . 'c\(\k\|\i\)\+' . '\%<' . (l:endLine+1) . 'l\%<' . (l:endCol+2) . 'c'
+    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . l:startLine . 'l\)\)\(\k\|\i\)\+' . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+1) . 'c\&\%' . l:endLine . 'l\)\)'
+endfunction
+" vnoremap <leader>ps <Esc>/\%V[^,(){}\[\]><;]\+\%V<CR>
+" vnoremap <leader>ps :s/[^,(){}\[\]><;]\+/\1/<CR>v
+vnoremap <leader>hv :<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h) vi):<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h( vi(:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h] vi]:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h[ vi[:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h} vi}:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+nnoremap <leader>h{ vi{:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+
+" Ctrl+n to select matched text
+nnoremap <expr> <C-n> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '//<CR>v//e<CR>'
+vnoremap <C-n> v//<CR>v//e<CR>
+nnoremap <expr> <C-p> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '??<CR>v//e<CR>'
+vnoremap <C-p> ov??<CR>v//e<CR>
 
 " visual to the end don't enclude newline
 vnoremap _ $
@@ -534,14 +596,6 @@ vnoremap - $h
 " two way expansion of visual selection
 vnoremap L <Esc>`<v`>loho
 vnoremap H <Esc>`<v`>holo
-
-" function! SearchInVisualRange()
-"     '<,'>s/\(^.*;\)\|\(.*$;\)/\1\2/g
-" endfunction
-" vnoremap <leader>s :call SearchInVisualRange()<CR>
-
-" (asdadasd, asdasdsaad; asdadasdasdasda, asdasdasda)
-" select field separated by ,/; inside bracket
 
 " select around symbols
 vnoremap i, t,ot,o
@@ -612,12 +666,8 @@ vnoremap < <gv^
 nnoremap <Leader>v :noh<CR>
 
 " search for selected text in visual mode
-" function! SelectionSearch() range
-"     normal! gvy: let@/ = @"<CR>
-"     " normal! :let @/ = @"<CR>
-"     " let @/ = @"
-" endfunction
-" vnoremap * :call SelectionSearch()<CR>
+nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
+nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
 vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
 
 " toggle number sidebar (for more easily tmux select)
@@ -694,14 +744,14 @@ if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
     vnoremap Y "+y
     noremap YY "+yy
 
-    noremap p gp
-    noremap P "+gp
+    noremap <nowait> p gp
+    noremap <nowait> P "+gp
     noremap gp p
     noremap gP "+p
     vnoremap gP "+P
-    " pls reserve mp for this
-    vnoremap p mpgPv`po
-    vnoremap P mp"+gPv`po
+    " pls reserve mm for this
+    vnoremap <nowait> p mmgPv`mo
+    vnoremap <nowait> P mm"+gPv`mo
 
     " In visual mode, 'D' cuts the selection and puts it in the system clipboard
     vnoremap D "+x
@@ -719,14 +769,14 @@ else
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
     " visual mode paste should select the pasted content
     " first, fix cursor position after paste (default is - to the end if pasting no linebreak, to the begining of the next line if pasting linebreaks)
-    noremap p gp
-    noremap P "0gp
+    noremap <nowait> p gp
+    noremap <nowait> P "0gp
     noremap gp p
     noremap gP "0p
     vnoremap gP "0P
     " pls reserve mp for this
-    vnoremap p mpgPv`po
-    vnoremap P mp"0gPv`po
+    vnoremap <nowait> p mpgPv`po
+    vnoremap <nowait> P mp"0gPv`po
 
     vnoremap D "0x
     nnoremap DD "0dd
@@ -763,13 +813,13 @@ inoremap <nowait> ^]O <Esc>O
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
 " above)
-inoremap <expr> <Up> col(".") == 1 ? "<Esc>ki" : "<Esc>ka"
+inoremap <expr> <nowait> <Up> col(".") == 1 ? "<Esc>ki" : "<Esc>ka"
 inoremap <expr> <Down> col(".") == 1 ? "<Esc>ji" : "<Esc>ja"
 inoremap <expr> <Left> col(".") == 1 ? "<Esc>k$a" : "<Esc>i"
 inoremap <expr> <Right> col(".") == col("$") ? "<Esc>j0i" : (col(".") == 1 ? "<Esc>li" : "<Esc>la")
 
 " same in normal mode
-nnoremap <Up> k
+nnoremap <nowait> <Up> k
 nnoremap <Down> j
 nnoremap <expr> <Left> col(".") == 1 ? "k$" : "h"
 nnoremap <expr> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == col("$") ? "j0" : "l"
@@ -808,10 +858,6 @@ noremap <leader>bp :bp<CR>
 
 noremap <C-Up> <C-Y>
 noremap <C-Down> <C-E>
-
-" Ctrl+n to select matched text
-nnoremap <C-n> h//<CR>vh//e<CR>
-vnoremap <C-n> vh//<CR>vh//e<CR>
 
 " :reload vim
 command Reload source ~/.vimrc
