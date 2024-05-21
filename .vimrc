@@ -327,6 +327,10 @@ call plug#end()
 " ############################# "
 " Plugin mapping & configuration:
 
+" comments out (not working with C-/)
+" nnoremap <C-/> gcc
+" vnoremap <C-/> gc
+
 " vim-python
 let g:python_highlight_all = 1
 
