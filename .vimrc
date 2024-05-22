@@ -228,7 +228,7 @@ function! StripWhitespace()
 	call setpos('.', save_cursor)
 	call setreg('/', old_query)
 endfunction
-noremap <leader>sw :call StripWhitespace()<CR>
+noremap <leader>ws :call StripWhitespace()<CR>
 " Save a file as root (,W)
 noremap <leader>W :w !sudo tee % > /dev/null<CR>
 
@@ -315,6 +315,12 @@ call plug#begin('~/.vim/plugged')
                 " color table viewer, :XtermColorTable
                 Plug 'guns/xterm-color-table.vim'
 
+                " Fastfold
+                Plug 'Konfekt/FastFold'
+
+                " vim-slime
+                Plug 'jpalardy/vim-slime'
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -327,9 +333,17 @@ call plug#end()
 " ############################# "
 " Plugin mapping & configuration:
 
-" comments out (not working with C-/)
-" nnoremap <C-/> gcc
-" vnoremap <C-/> gc
+" vim slime
+let g:slime_target = "tmux"
+let g:slime_no_mappings = 1
+xmap <leader>s <Plug>SlimeRegionSend
+nmap <leader>s <Plug>SlimeMotionSend
+nmap <leader>ss <Plug>SlimeLineSend
+
+
+" comments out (not working)
+" nnoremap <leader>c <Plug>CommentaryLine
+" vnoremap <leader>c <Plug>Commentary
 
 " vim-python
 let g:python_highlight_all = 1
@@ -405,7 +419,7 @@ nmap <leader>F :TagbarJumpPrev<CR>
 nnoremap <leader>n :NERDTreeFocus<CR>
 
 " =======================================================================================================
-" Easyfold, unfold all after fold creation (every new session)
+" Simpylfold, unfold all after fold creation (every new session)
 " adding SourcePost event because certain .vim file will ignore foldopen when sourcing ~/.vimrc
 autocmd BufWinEnter,SourcePost * silent! :%foldopen!
 " set initial maximum nested folding level (only fold if nested over several level), just in case
@@ -421,7 +435,7 @@ let g:coc_global_extensions = [
 \ 'coc-json'
 \ ]
 let g:coc_start_at_startup = 1
-set updatetime=300
+set timeout timeoutlen=600 ttimeoutlen=100
 " preventing error signs shifting sidebar (can still be disabled by f2)
 set signcolumn=yes
 autocmd CursorHold * silent call CocActionAsync('highlight')
@@ -514,6 +528,10 @@ inoremap <silent><expr> <S-TAB>
 " let b:surround_{char2nr('_')} = "<_>\r</_>"
 " let b:surround_{char2nr('/')} = "</>\r</>"
 " let b:surround_{char2nr('\')} = "</>\r</>"
+
+" Simpylfold
+" don't fold docstring because some config file will have alot of them
+let g:SimpylFold_fold_docstring = 0
 
 " Plugin mappings END
 " =======================================================================================================
@@ -869,6 +887,35 @@ command Reload source ~/.vimrc
 " openup the full highlight document
 command Highlight so $VIMRUNTIME/syntax/hitest.vim
 
+"=============================================================================="
+" Functions
+
+" vim performance profiling:
+" the second time toggle will save and close the file
+" find the file at /tmp/vim_profile.log
+" use zsh command listVimProfile to see the list
+let g:vimprofilepaused = -1
+" Set up an autocommand to stop profiling when exiting a file
+autocmd VimLeavePre * if g:vimprofilepaused == 1 | let g:vimprofilepaused = -1 | noautocmd wqall! | endif
+autocmd VimLeavePre * if g:vimprofilepaused == 0 | let g:vimprofilepaused = -1 | profile pause | noautocmd wqall! | endif
+" updatetime is defaulted to 4000 ms, and CursorHold is triggered if no key input in updatetime
+set updatetime=4000
+" Set up an autocommand to pause profiling after 4 seconds of inactivity
+autocmd CursorHold * if g:vimprofilepaused == 0 | echo 'profiling paused!' | profile pause | let g:vimprofilepaused = 1 | endif
+function! ProfilingToggle()
+    if g:vimprofilepaused == -1
+        let g:vimprofilepaused = 0
+        execute 'profile start /tmp/vim_profile.log'
+        execute 'profile func *'
+        execute 'profile file *'
+    elseif g:vimprofilepaused == 1
+        let g:vimprofilepaused = 0
+        execute 'profile continue'
+    else
+        let g:vimprofilepaused = 1
+        execute 'profile pause'
+    endif
+endfunction
 " --------------------------------------------------------------------------------
 " alternative to map search hk: <\m>
 function! s:ShowMaps()

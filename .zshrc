@@ -157,6 +157,87 @@ function history_corruption_fix () {
 	rm .zsh_history_bad
 }
 
+# vim profile.log top 10 time consumer report
+function listVimProfile() {
+    local file='/tmp/vim_profile.log'
+
+    # Extract lines with 'Total time:' and the number, sort them in descending order
+    grep 'Total time:' $file | awk '{print $3}' | sort -nr | head -10 | sort -n | while read line
+    do
+        # For each number, find the corresponding 'Total time:' line, and print 3 lines before and 1 line after
+        grep -B 3 -A 1 "Total time:   $line" $file
+        echo
+    done
+}
+# vim startup top 20 time consumer
+# function listVimStartupProfile() {
+#     # Validate arguments
+#     if [[ $# -ne 1 ]]; then
+#         echo "Usage: listVimStartupProfile <script_file>"
+#         return 1
+#     fi
+
+#     local script_file="$1"
+
+#     # Check if script file exists
+#     if [[ ! -f "$script_file" ]]; then
+#         echo "Error: Script file '$script_file' does not exist."
+#         return 1
+#     fi
+
+#     # Define temporary profile file
+#     local profile_file="/tmp/vim_startup_profile.log"
+
+#     # Generate Vim startup profile
+#     vim --startuptime "$profile_file" "$script_file"
+
+#     # Define regular expressions for parsing
+#     local re_timestamp='^([0-9.]+)\s+([0-9.]+):'  # Matches timestamp
+#     local re_sourced_script='^(.*?):\s+(.*)$'   # Matches sourced script details
+#     local dtimefile='/tmp/profile_sorted.tmp'
+
+#     # Calculate delta time for each line (previous - current)
+#     awk -v RS='\n' 'NR > 1 { delta = $1 - prev; prev = $1; print delta, $0 } { prev = $1 }' "$profile_file" | sort -nrk1 | head -20 > $dtimefile
+
+#     # Process each entry in the sorted list
+#     while IFS= read -r delta line; do
+#     # Check if line starts with a timestamp (valid entry)
+#     if [[ $line =~ ^$re_timestamp ]]; then
+#       # Extract timestamp and elapsed time (if available)
+#       elapsed=${BASH_REMATCH[2]}  # Second capture group (elapsed)
+#       timestamp=${BASH_REMATCH[1]}
+
+#       # Print information based on elapsed time availability
+#       if [[ -n "$elapsed" ]]; then
+#         local total_time_line=$(grep -m 1 "^Total time:    $elapsed" "$profile_file")
+#         # Check if line was found
+#         if [[ -n "$total_time_line" ]]; then
+#           # Extract script name (if sourced)
+#           local script_name=$(grep -Eo "$re_sourced_script" <<<"$total_time_line")
+#           script_name=${script_name##*:}  # Remove timestamp
+
+#           # Print output with script name (if available)
+#           echo "Delta time: $delta ms (from ${timestamp}ms)"
+#           if [[ -n "$script_name" ]]; then
+#             echo "Sourced script: $script_name"
+#           fi
+#           echo "$line"
+#           echo
+#         fi
+#       else
+#         # Print for lines without elapsed time but with valid timestamp
+#         echo "Delta time: $delta ms (no elapsed time available)"
+#         echo "$line"
+#         echo
+#       fi
+#     fi
+#     done < $dtimefile
+#     rm $dtimefile
+# }
+
+
+
+
 # copilot shortcut
 alias cosugg='gh copilot suggest'
 alias coexpl='gh copilot explain'

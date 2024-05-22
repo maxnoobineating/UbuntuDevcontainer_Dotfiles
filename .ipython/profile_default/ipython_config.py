@@ -437,12 +437,12 @@ c = get_config()  #noqa
 #  is passed through a pager (like 'less'), and some pagers get confused with
 #  color codes, this capability can be turned off.
 #  Default: True
-# c.InteractiveShell.color_info = True
+c.InteractiveShell.color_info = True
 
 ## Set the color scheme (NoColor, Neutral, Linux, or LightBG).
 #  Choices: any of ['Neutral', 'NoColor', 'LightBG', 'Linux'] (case-insensitive)
 #  Default: 'Neutral'
-# c.InteractiveShell.colors = 'Neutral'
+c.InteractiveShell.colors = 'Neutral'
 
 #  Default: False
 # c.InteractiveShell.debug = False
@@ -594,7 +594,7 @@ c = get_config()  #noqa
 
 ## 
 #  See also: InteractiveShell.color_info
-# c.TerminalInteractiveShell.color_info = True
+c.TerminalInteractiveShell.color_info = True
 
 ## Set the color scheme (NoColor, Neutral, Linux, or LightBG).
 #  See also: InteractiveShell.colors
@@ -661,17 +661,24 @@ c = get_config()  #noqa
 
 ## Highlight matching brackets.
 #  Default: True
-# c.TerminalInteractiveShell.highlight_matching_brackets = True
+c.TerminalInteractiveShell.highlight_matching_brackets = False
+
 
 ## The name or class of a Pygments style to use for syntax
 #          highlighting. To see available styles, run `pygmentize -L styles`.
 #  Default: traitlets.Undefined
-# c.TerminalInteractiveShell.highlighting_style = traitlets.Undefined
+# c.TerminalInteractiveShell.highlighting_style = 'traitlets.Undefined'
 
 ## Override highlighting format for specific tokens
 #  Default: {}
 # c.TerminalInteractiveShell.highlighting_style_overrides = {}
-
+from pygments.token import Token
+c.TerminalInteractiveShell.highlighting_style_overrides = {
+    Token.MatchingBrackets.Other  : '#FF00FF', # nested brackets color
+    Token.MatchingBracket.Other   : '#FF00FF', # bracket color
+    Token.MatchingBracket.Cursor  : '#4b3588', # on cursor over bracket color
+    Token.MatchingBrackets.Cursor : '#4b3588', # on cursor over nested matching brackets color
+}
 ## Total length of command history
 #  See also: InteractiveShell.history_length
 # c.TerminalInteractiveShell.history_length = 10000
@@ -878,7 +885,7 @@ c = get_config()  #noqa
 #  
 #              printf "\x1b[38;2;255;100;0mTRUECOLOR\x1b[0m\n"
 #  Default: False
-# c.TerminalInteractiveShell.true_color = False
+# c.TerminalInteractiveShell.true_color = True
 
 ## The time in milliseconds that is waited for a key code
 #         to complete.
