@@ -90,6 +90,8 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
+export PYTHONPATH="/root/.ipython/extensions"
+export IPYTHONDIR="/root/.ipython"
 
 # You may need to manually set your language environment
 export LC_ALL="en_US.UTF-8"

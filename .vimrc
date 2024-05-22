@@ -1,3 +1,6 @@
+" filetype identification
+autocmd BufNewFile,BufRead *.ipy set filetype=python
+
 " popup menu settings
 set pumheight=4
 

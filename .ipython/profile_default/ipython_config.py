@@ -21,7 +21,7 @@ c = get_config()  #noqa
 
 ## Execute the given command string.
 #  Default: ''
-# c.InteractiveShellApp.code_to_run = ''
+# c.InteractiveShellApp.code_to_run = 'sys.path.append("/root/.ipython/extensions")'
 
 ## Run the file referenced by the PYTHONSTARTUP environment
 #          variable at IPython startup.
@@ -34,11 +34,11 @@ c = get_config()  #noqa
 
 ## lines of code to run at IPython startup.
 #  Default: []
-# c.InteractiveShellApp.exec_lines = []
+# c.InteractiveShellApp.exec_lines = ['import sys; sys.path.append("/root/.ipython/extensions")']
 
 ## A list of dotted module names of IPython extensions to load.
 #  Default: []
-c.InteractiveShellApp.extensions = ['regex_visualizer.py']
+c.InteractiveShellApp.extensions = []
 
 ## Dotted module name(s) of one or more IPython extensions to load.
 #  
@@ -175,7 +175,7 @@ c.InteractiveShellApp.extensions = ['regex_visualizer.py']
 # BaseIPythonApplication(Application) configuration
 #------------------------------------------------------------------------------
 #  Default: False
-# c.BaseIPythonApplication.add_ipython_dir_to_sys_path = False
+# c.BaseIPythonApplication.add_ipython_dir_to_sys_path = True
 
 ## Whether to create profile dir if it doesn't exist
 #  Default: False
@@ -271,11 +271,11 @@ c.InteractiveShellApp.extensions = ['regex_visualizer.py']
 
 ## lines of code to run at IPython startup.
 #  See also: InteractiveShellApp.exec_lines
-# c.TerminalIPythonApp.exec_lines = []
+# c.TerminalIPythonApp.exec_lines = ['import sys; sys.path.append("/root/.ipython/extensions")']
 
 ## A list of dotted module names of IPython extensions to load.
 #  See also: InteractiveShellApp.extensions
-# c.TerminalIPythonApp.extensions = []
+# c.TerminalIPythonApp.extensions = ['regex_visualizer']
 
 ## Path to an extra config file to load.
 #  See also: BaseIPythonApplication.extra_config_file
