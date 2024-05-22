@@ -38,7 +38,7 @@ c = get_config()  #noqa
 
 ## A list of dotted module names of IPython extensions to load.
 #  Default: []
-# c.InteractiveShellApp.extensions = []
+c.InteractiveShellApp.extensions = ['regex_visualizer.py']
 
 ## Dotted module name(s) of one or more IPython extensions to load.
 #  
