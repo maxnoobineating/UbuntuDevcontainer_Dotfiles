@@ -2,7 +2,6 @@ import re
 
 def reviz(line, cell):
     print(line)
-    print(cell)
 
 def load_ipython_extension(ipython):
     """This function is called when the extension is
