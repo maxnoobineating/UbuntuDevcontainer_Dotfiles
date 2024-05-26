@@ -598,7 +598,7 @@ c.TerminalInteractiveShell.color_info = True
 
 ## Set the color scheme (NoColor, Neutral, Linux, or LightBG).
 #  See also: InteractiveShell.colors
-# c.TerminalInteractiveShell.colors = 'Neutral'
+c.TerminalInteractiveShell.colors = 'Neutral'
 
 ## Set to confirm when you try to exit IPython with an EOF (Control-D in Unix,
 #  Control-Z/Enter in Windows). By typing 'exit' or 'quit', you can force a
@@ -661,7 +661,9 @@ c.TerminalInteractiveShell.color_info = True
 
 ## Highlight matching brackets.
 #  Default: True
-c.TerminalInteractiveShell.highlight_matching_brackets = False
+c.TerminalInteractiveShell.highlight_matching_brackets = True
+c.InteractiveShell.highlight_color = 'cyan'
+c.TerminalInteractiveShell.highlight_color = 'cyan'
 
 
 ## The name or class of a Pygments style to use for syntax
@@ -672,13 +674,13 @@ c.TerminalInteractiveShell.highlight_matching_brackets = False
 ## Override highlighting format for specific tokens
 #  Default: {}
 # c.TerminalInteractiveShell.highlighting_style_overrides = {}
-from pygments.token import Token
-c.TerminalInteractiveShell.highlighting_style_overrides = {
-    Token.MatchingBrackets.Other  : '#FF00FF', # nested brackets color
-    Token.MatchingBracket.Other   : '#FF00FF', # bracket color
-    Token.MatchingBracket.Cursor  : '#4b3588', # on cursor over bracket color
-    Token.MatchingBrackets.Cursor : '#4b3588', # on cursor over nested matching brackets color
-}
+# from pygments.token import Token
+# c.TerminalInteractiveShell.highlighting_style_overrides = {
+#     Token.MatchingBrackets.Other  : '#FF00FF', # nested brackets color
+#     Token.MatchingBracket.Other   : '#FF00FF', # bracket color
+#     Token.MatchingBracket.Cursor  : '#4b3588', # on cursor over bracket color
+#     Token.MatchingBrackets.Cursor : '#4b3588', # on cursor over nested matching brackets color
+# }
 ## Total length of command history
 #  See also: InteractiveShell.history_length
 # c.TerminalInteractiveShell.history_length = 10000

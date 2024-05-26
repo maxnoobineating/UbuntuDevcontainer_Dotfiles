@@ -11,7 +11,7 @@ def reviz(line):
     for m in regiter:
         print(m)
         begin, end = m.span()
-        charlist.insert(begin+deviate, '\033[91m')
+        charlist.insert(begin+deviate, '\034[91m')
         charlist.insert(end+deviate+1, '\033[0m')
         # charlist.insert(begin+deviate, r'[')
         # charlist.insert(end+deviate, r']')

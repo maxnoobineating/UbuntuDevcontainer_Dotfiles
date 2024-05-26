@@ -339,6 +339,7 @@ call plug#end()
 " vim slime
 let g:slime_target = "tmux"
 let g:slime_no_mappings = 1
+let g:slime_python_ipython = 1
 xmap <leader>s <Plug>SlimeRegionSend
 nmap <leader>s <Plug>SlimeMotionSend
 nmap <leader>ss <Plug>SlimeLineSend
@@ -383,7 +384,9 @@ let g:autoswap_detect_tmux=1
 let &t_ZH="\e[3m"
 let &t_ZR="\e[23m"
 " highlight Comment cterm=italic gui=italic
-" set t_Co=256
+if &term =~ '256color'
+  set t_Co=256
+endif
 set background=dark
 let g:solarized_italic=1
 let g:solarzied_italic_comments=1
@@ -545,6 +548,9 @@ filetype plugin indent on
 
 " #===================================================================================#
 " Keybinding Mappings
+inoremap <C-k> <C-o>d$
+inoremap <C-b> <C-o>d^
+
 " <C-h>/<C-l> replacing non-whitespace jump B/W
 nnoremap <C-l> W
 nnoremap <C-h> B
@@ -656,12 +662,16 @@ nnoremap diw :call CustomWordMotion('diw')<CR>
 nmap caw vawc
 nmap ciw viwc
 nmap cw viwc
+nmap daw vawd
+nmap diw viwd
+nmap dw viwd
 vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
 vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
 " 'W' inplace of the original 'w' (original 'W' is everything but whitespace, quite useless)
 nnoremap W w
 nnoremap daW daw
 nnoremap diW diw
+nnoremap dW dw
 nnoremap caW caw
 nnoremap ciW ciw
 nnoremap cW viwc
@@ -699,6 +709,11 @@ vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
 let g:signcolumn_toggle_state = 'no'
 " nnoremap <expr> <f2> ":set number! relativenumber!"
 nnoremap <expr> <f2> &signcolumn == 'yes' ? ":set signcolumn=no number! relativenumber!<CR>" : ":set signcolumn=yes number! relativenumber!<CR>"
+" Set SignColumn background color to light gray
+highlight SignColumn ctermbg=0
+highlight CocMenuSel ctermfg=12 ctermbg=4
+highlight CocFloating ctermfg=4 ctermbg=12
+iw
 
 " openning register panel
 nnoremap <leader>r :reg<CR>
@@ -852,8 +867,8 @@ nnoremap <expr> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == col("$") ?
 " inoremap <expr> <C-L> IsCursorAtEnd() ? "<Cmd>echo 'true'<CR> " : "<Cmd>echo 'false'<CR>"
 " insert mode delete until word end
 inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" : "<Esc>lce"
-" insert mode delete until word begining (excludes current cursor)
-inoremap <expr> <C-b> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
+" insert mode delete until word begining (excludes current cursor) redundant
+" inoremap <expr> <C-w> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
 imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
