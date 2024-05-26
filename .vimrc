@@ -1,3 +1,4 @@
+
 " filetype identification
 autocmd BufNewFile,BufRead *.ipy set filetype=python
 
@@ -397,8 +398,8 @@ colorscheme solarized
 let s:terminal_italic=1
 
 " Vim-airline-themes config
-let g:airline_theme='solarized'
-let g:airline_solarized_bg='light'
+let g:airline_theme='alduin'
+" let g:airline_solarized_bg='light'
 " Enable tabline
 " let g:airline#extensions#tabline#enabled = 1
 " let g:airline_powerline_fonts = 1
@@ -435,7 +436,6 @@ set foldlevelstart=3
 " Coc.nvim
 " config
 " set selection highlight
-hi CocMenuSel ctermbg=darkgrey
 let g:coc_global_extensions = [
 \ 'coc-pyright',
 \ 'coc-json'
@@ -709,11 +709,7 @@ vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
 let g:signcolumn_toggle_state = 'no'
 " nnoremap <expr> <f2> ":set number! relativenumber!"
 nnoremap <expr> <f2> &signcolumn == 'yes' ? ":set signcolumn=no number! relativenumber!<CR>" : ":set signcolumn=yes number! relativenumber!<CR>"
-" Set SignColumn background color to light gray
-highlight SignColumn ctermbg=0
-highlight CocMenuSel ctermfg=12 ctermbg=4
-highlight CocFloating ctermfg=4 ctermbg=12
-iw
+
 
 " openning register panel
 nnoremap <leader>r :reg<CR>
@@ -935,30 +931,58 @@ function! ProfilingToggle()
     endif
 endfunction
 " --------------------------------------------------------------------------------
-" alternative to map search hk: <\m>
-function! s:ShowMaps()
-  let old_reg = getreg("a")          " save the current content of register a
-  let old_reg_type = getregtype("a") " save the type of the register as well
-try
-  redir @a                           " redirect output to register a
-  " Get the list of all key mappings silently, satisfy "Press ENTER to continue"
-  silent map | call feedkeys("\<CR>")
-  redir END                          " end output redirection
-  vnew                               " new buffer in vertical window
-  put a                              " put content of register
-	setlocal buftype=nofile bufhidden=delete " set delete buffer after exiting
-  " Sort on 4th character column which is the key(s)
-  %!sort -k1.4,1.4
-	setlocal nowrap
-  setlocal nomodifiable
-finally                              " Execute even if exception is raised
-  call setreg("a", old_reg, old_reg_type) " restore register a
-"trying to replace :q in the mapping pane with :bd | q for clearing buffer
-endtry
-endfunction
-com! ShowMaps call s:ShowMaps()      " Enable :ShowMaps to call the function
 
-nnoremap <Leader>m :ShowMaps<CR>
+function! OpenTempBuffer(command, sortCMD='')
+    let old_reg = getreg("a")          " save the current content of register a
+    let old_reg_type = getregtype("a") " save the type of the register as well
+    try
+        redir @a                           " redirect output to register a
+        " Get the list of all key mappings silently, satisfy "Press ENTER to continue"
+        silent execute a:command | call feedkeys("\<CR>")
+        redir END                          " end output redirection
+        vnew                               " new buffer in vertical window
+        put a                              " put content of register
+        setlocal buftype=nofile bufhidden=delete " set delete buffer after exiting
+        " custom sort
+        execute a:sortCMD
+        setlocal nowrap
+        setlocal nomodifiable
+        nnoremap <buffer> q :bd<CR>
+    finally                              " Execute even if exception is raised
+        call setreg("a", old_reg, old_reg_type) " restore register a
+    "trying to replace :q in the mapping pane with :bd | q for clearing buffer
+    endtry
+endfunction
+
+" open mapping buffer
+nnoremap <leader>m :call OpenTempBuffer('map', '%!sort -k1.4,1.4')<CR>
+" open highlight buffer
+nnoremap <leader>hh :call OpenTempBuffer('highlight')<CR>
+
+
+" alternative to map search hk: <\m>
+"function! s:ShowMaps()
+"    let old_reg = getreg("a")          " save the current content of register a
+"    let old_reg_type = getregtype("a") " save the type of the register as well
+"    try
+"        redir @a                           " redirect output to register a
+"        " Get the list of all key mappings silently, satisfy "Press ENTER to continue"
+"        silent map | call feedkeys("\<CR>")
+"        redir END                          " end output redirection
+"        vnew                               " new buffer in vertical window
+"        put a                              " put content of register
+"        setlocal buftype=nofile bufhidden=delete " set delete buffer after exiting
+"        " Sort on 4th character column which is the key(s)
+"        %!sort -k1.4,1.4
+"        setlocal nowrap
+"        setlocal nomodifiable
+"    finally                              " Execute even if exception is raised
+"        call setreg("a", old_reg, old_reg_type) " restore register a
+"    "trying to replace :q in the mapping pane with :bd | q for clearing buffer
+"    endtry
+"endfunction
+"com! ShowMaps call s:ShowMaps()      " Enable :ShowMaps to call the function
+" nnoremap <Leader>m :ShowMaps<CR>
 
 " --------------------------------------------------------------------------------
 " --------------------------------------------------------------------------------
@@ -1010,6 +1034,18 @@ endif
 
 " ############################# "
 " suffix section
+
+" Set SignColumn background color to light gray
+" 256 xterm color see: https://www.ditig.com/publications/256-colors-cheat-sheet
+highlight SignColumn ctermbg=0
+highlight CocMenuSel ctermfg=152 ctermbg=132
+highlight CocFloating ctermfg=96 ctermbg=0
+highlight TabLineSel  term=underline,reverse cterm=underline,reverse ctermfg=131 ctermbg=53 gui=bold
+highlight TabLine term=underline cterm=underline ctermfg=97 ctermbg=0 gui=underline guibg=DarkGrey
+highlight TabLineFill term=underline cterm=underline ctermfg=97 ctermbg=0 gui=reverse
+highlight Comment term=italic cterm=italic ctermfg=181 guifg=#80a0ff
+highlight Cursor cterm=reverse ctermbg=12
+highlight Visual term=reverse cterm=reverse ctermfg=132 ctermbg=123 guibg=DarkGrey
 
 " disable autocomment-out of newlines
 " putting this at the end to avoid formatoptions resetting

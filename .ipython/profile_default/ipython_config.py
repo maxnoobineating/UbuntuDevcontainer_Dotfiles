@@ -662,8 +662,8 @@ c.TerminalInteractiveShell.colors = 'Neutral'
 ## Highlight matching brackets.
 #  Default: True
 c.TerminalInteractiveShell.highlight_matching_brackets = True
-c.InteractiveShell.highlight_color = 'cyan'
-c.TerminalInteractiveShell.highlight_color = 'cyan'
+# c.InteractiveShell.highlight_color = 'cyan'
+# c.TerminalInteractiveShell.highlight_color = 'cyan'
 
 
 ## The name or class of a Pygments style to use for syntax
