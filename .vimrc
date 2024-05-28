@@ -1,3 +1,6 @@
+" jump to existing buffer first
+set switchbuf=usetab
+
 
 " filetype identification
 autocmd BufNewFile,BufRead *.ipy set filetype=python
@@ -267,7 +270,7 @@ call plug#begin('~/.vim/plugged')
 				Plug 'jiangmiao/auto-pairs'
 
                 " requires API keys, or it'll neg you
-                " Plug 'wakatime/vim-wakatime'
+                Plug 'wakatime/vim-wakatime'
 
                 Plug 'vim-scripts/TaskList.vim'
 
@@ -325,6 +328,10 @@ call plug#begin('~/.vim/plugged')
                 " vim-slime
                 Plug 'jpalardy/vim-slime'
 
+                " vim-fzf
+                Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+                Plug 'junegunn/fzf.vim'
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -336,6 +343,24 @@ call plug#end()
 
 " ############################# "
 " Plugin mapping & configuration:
+
+" fzf.vim
+" Initialize configuration dictionary
+let g:fzf_vim = {}
+let g:fzf_action = {
+  \ 'return': 'drop',
+  \ 'ctrl-t': 'tab drop',
+  \ 'ctrl-x': 'split',
+  \ 'ctrl-v': 'vsplit' }
+nnoremap <leader>ff :Files<CR>
+nnoremap <leader>fb :Buffers<CR>
+function AgPatternFinder()
+    let l:pattern = input('Enter pattern: ')
+    execute 'Ag ' . l:pattern
+endfunction
+nnoremap <leader>fa :call AgPatternFinder()<CR>
+nnoremap <leader>ft :Tags<CR>
+
 
 " vim slime
 let g:slime_target = "tmux"
@@ -418,8 +443,6 @@ augroup CTagGeneration
     au BufWritePost * silent! call system('ctags ' . expand('%:p') . '2>&1 >/dev/null &')
     " au BufWinEnter *  expend('%:p')
 augroup END
-nmap <leader>f :TagbarJumpNext<CR>
-nmap <leader>F :TagbarJumpPrev<CR>
 
 " =======================================================================================================
 " NerdTree
@@ -547,6 +570,59 @@ filetype plugin indent on
 
 
 " #===================================================================================#
+" Mappings
+
+" save all matching into register separated by \n
+function! ConfirmAndAppend(match)
+    " Ask the user if they want to append the match to the register
+    " if confirm("Append this match to register a? " . a:match, "&Yes\n&No") == 1
+    call setreg('0', a:match . "\n", 'a')
+    " endif
+    return a:match  " Replace the match with itself
+endfunction
+nnoremap yh :let@0=''<CR>:%s//\=ConfirmAndAppend(submatch(0))/c<CR>
+
+" search pattern pre-fill
+" reserve s register for matched text
+nnoremap ;; :%s:::c<C-b><right><right><right>
+nnoremap ;' :%s:::n<C-b><right><right><right>
+vnoremap ;; <Esc>:'<,'>s:\%V::c<C-b><right><right><right><right><right><right><right><right><right><right>
+vnoremap ;' <Esc>:'<,'>s:\%V::n<C-b><right><right><right><right><right><right><right><right><right><right>
+
+" search in recently selected lines
+nnoremap <leader>/ /\%V
+vnoremap <leader>/ <Esc>/\%V
+
+" C-w + C-hjkl for pane-enlarging switch
+function! ResizeVertical(percent)
+    execute 'vertical resize'
+    let l:current_width = winwidth(0)
+    let l:resize_amount = float2nr(l:current_width * a:percent / 100)
+    execute 'vertical resize ' . l:resize_amount
+endfunction
+
+function! ResizeHorizontal(percent)
+    execute 'resize'
+    let l:current_height = winheight(0)
+    let l:resize_amount = float2nr(l:current_height * a:percent / 100)
+    execute 'resize ' . resize_amount
+endfunction
+" Resize mappings with Ctrl held down
+nnoremap <C-w><C-h> :wincmd h<CR>:call ResizeVertical(75)<CR>
+nnoremap <C-w><C-j> :wincmd j<CR>:call ResizeHorizontal(75)<CR>
+nnoremap <C-w><C-k> :wincmd k<CR>:call ResizeHorizontal(75)<CR>
+nnoremap <C-w><C-l> :wincmd l<CR>:call ResizeVertical(75)<CR>
+
+
+" change in , separated
+" nnoremap ci, v/\([^,]*?\K[)\]}]|)
+" nnoremap ci, vi):<C-u>call SepHLSearch()<CR><C-o>
+nmap ci, ,h)<C-o><C-n>c
+
+" move tab
+nnoremap <C-w>< :tabmove -1<CR>
+nnoremap <C-w>> :tabmove +1<CR>
+
 " Keybinding Mappings
 inoremap <C-k> <C-o>d$
 inoremap <C-b> <C-o>d^
@@ -562,10 +638,6 @@ imap <expr> <Tab> (col('.') == 1) && (getline(line('.')-1) != '') ? '<C-w><CR>' 
 nnoremap <leader>ul U
 nnoremap U <C-r>
 
-" search pattern pre-fill
-noremap ;; :%s:::cg<Left><Left><Left>
-noremap ;' :.s:::cg<Left><Left><Left>
-
 " selection replacement
 function! ReplaceWithInput()
     " put cursor on the head of matched pattern
@@ -574,10 +646,11 @@ function! ReplaceWithInput()
     let l:cusline = line('.')
     let l:text = input('Enter replacement text: ')
     let l:old_pattern = getreg('h')
-    execute '.,$s/' . '\%>' . (l:cuscol-1) . 'c' . l:old_pattern . '/' . l:text . '/c'
-    silent! execute '1,' . l:cusline . 's/' . l:old_pattern . '\%<' . l:cuscol . 'c/' . l:text . '/c'
+    " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
+    execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:text . '/c' 
+    execute '1,' . l:cusline . 's/' . l:old_pattern . '/' . l:text . '/c'
 endfunction
-vnoremap <C-r> "hy:<C-u>call replacewithinput()<CR>
+vnoremap <C-r> "hy:<C-u>call ReplaceWithinput()<CR>
 " if cursor on top of match highlights, enter replacing commands
 function! IsOnMatch()
     " n: nojump, c: include first char of match, b: search behind
@@ -602,7 +675,7 @@ function! SepHLSearch()
     let [_, l:endLine, l:endCol, _] = getcharpos("'>")
     " let @/ = '\%' . l:startLine . 'l\%>' . (l:startCol-1) . 'c\_[^,(){}\[\]><+-*/; \t\n\r]\+' . '\%' . l:endLine . 'l\%<' . (l:endCol+2) . 'c'
     " let @/ = '\%>' . (l:startLine-1) . 'l\%>' . (l:startCol-1) . 'c\(\k\|\i\)\+' . '\%<' . (l:endLine+1) . 'l\%<' . (l:endCol+2) . 'c'
-    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . l:startLine . 'l\)\)\(\k\|\i\)\+' . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+1) . 'c\&\%' . l:endLine . 'l\)\)'
+    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)[^,;]\+' . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
 endfunction
 " vnoremap <leader>ps <Esc>/\%V[^,(){}\[\]><;]\+\%V<CR>
 " vnoremap <leader>ps :s/[^,(){}\[\]><;]\+/\1/<CR>v
@@ -614,11 +687,20 @@ nnoremap <leader>h[ vi[:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h} vi}:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h{ vi{:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 
+
 " Ctrl+n to select matched text
-nnoremap <expr> <C-n> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '//<CR>v//e<CR>'
-vnoremap <C-n> v//<CR>v//e<CR>
-nnoremap <expr> <C-p> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '??<CR>v//e<CR>'
-vnoremap <C-p> ov??<CR>v//e<CR>
+nnoremap <expr> <Plug>VerityHighlightNext IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '//<CR>v//e<CR>'
+vnoremap <Plug>VerityHighlightNext v//<CR>v//e<CR>
+nnoremap <expr> <Plug>VerityHighlightPrev IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '??<CR>v//e<CR>'
+vnoremap <Plug>VerityHighlightPrev ov??<CR>v//e<CR>
+" nnoremap <expr> <C-n> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '//<CR>v//e<CR>'
+" vnoremap <C-n> v//<CR>v//e<CR>
+" nnoremap <expr> <C-p> IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '??<CR>v//e<CR>'
+" vnoremap <C-p> ov??<CR>v//e<CR>
+nmap <C-n> <Plug>VerityHighlightNext
+vmap <C-n> <Plug>VerityHighlightNext
+nmap <C-p> <Plug>VerityHighlightPrev
+vmap <C-p> <Plug>VerityHighlightPrev
 
 " visual to the end don't enclude newline
 vnoremap _ $
@@ -867,15 +949,15 @@ inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" 
 " inoremap <expr> <C-w> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
-imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
-imap <expr> <C-s> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
+imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
+imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
-nmap <C-s> viwc
-nmap <C-c> viWc
+nmap <C-c> viwc
+nmap <C-x> viWc
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
-nmap <C-D> viwd
+nmap <C-D> viWd
 
 
 " insert mode indent
@@ -896,7 +978,7 @@ noremap <C-Up> <C-Y>
 noremap <C-Down> <C-E>
 
 " :reload vim
-command Reload source ~/.vimrc
+command R source ~/.vimrc
 
 " openup the full highlight document
 command Highlight so $VIMRUNTIME/syntax/hitest.vim
