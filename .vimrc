@@ -1,7 +1,6 @@
 " jump to existing buffer first
 set switchbuf=usetab
 
-
 " filetype identification
 autocmd BufNewFile,BufRead *.ipy set filetype=python
 
@@ -458,6 +457,8 @@ set foldlevelstart=3
 " =======================================================================================================
 " Coc.nvim
 " config
+" for apt installed vim version < v.8.2, disable coc warning
+let g:coc_disable_startup_warning = 1
 " set selection highlight
 let g:coc_global_extensions = [
 \ 'coc-pyright',
