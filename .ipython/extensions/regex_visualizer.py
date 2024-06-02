@@ -1,4 +1,4 @@
-import re
+import regex
 
 def reviz(line):
     assert len(args:=list(filter(lambda s: s!='', line.split(' ')))) == 2, TypeError('reviz takes 2 arguments: (pattern, string)')
@@ -6,13 +6,13 @@ def reviz(line):
     pattern = get_ipython().ev(pattern_name)
     string = get_ipython().ev(string_name)
     charlist = list(string)
-    regiter = re.finditer(pattern, string)
+    regiter = regex.finditer(pattern, string)
     deviate = 0
     for m in regiter:
         print(m)
         begin, end = m.span()
-        charlist.insert(begin+deviate, '\034[91m')
-        charlist.insert(end+deviate+1, '\033[0m')
+        charlist.insert(begin+deviate, r'\034[91m')
+        charlist.insert(end+deviate, r'\033[0m')
         # charlist.insert(begin+deviate, r'[')
         # charlist.insert(end+deviate, r']')
         deviate += 2

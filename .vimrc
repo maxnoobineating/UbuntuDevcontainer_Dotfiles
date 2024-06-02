@@ -331,6 +331,7 @@ call plug#begin('~/.vim/plugged')
                 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
                 Plug 'junegunn/fzf.vim'
 
+
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
                 autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
@@ -342,6 +343,7 @@ call plug#end()
 
 " ############################# "
 " Plugin mapping & configuration:
+
 
 " fzf.vim
 " Initialize configuration dictionary
@@ -653,30 +655,102 @@ function! ReplaceWithInput()
 endfunction
 vnoremap <C-r> "hy:<C-u>call ReplaceWithinput()<CR>
 " if cursor on top of match highlights, enter replacing commands
+
+function! IsCursorInsideMatch(match)
+    let l:curline = getpos('.')[1]
+    let l:curcol = getpos('.')[2]
+    if l:curline > a:match.start[0] && l:curline < a:match.end[0]
+        return 1
+    endif
+    if l:curline == a:match.start[0] && l:curcol < a:match.start[1]
+        return 0
+    endif
+    if l:curline == a:match.end[0] && l:curcol > a:match.end[1]
+        return 0
+    endif
+    if l:curline == a:match.start[0] || l:curline == a:match.end[0]
+        return 1
+    endif
+    return 0
+endfunction
 function! IsOnMatch()
+    " THIS DOESN'T WORK WITH MULTILINE PATTERNS, fck Vim weirdness... why is getting matched text position so hard!?
     " n: nojump, c: include first char of match, b: search behind
     " backward search (b) until the first matching head ( works for cursor on the match and on the match head (c) )
-    let l:matchstart = searchpos(@/, 'Wncb')
-    " forward search until the first matching tail (e), including cursor on tail (c)
-    let l:matchend = searchpos(@/, 'Wnce')
-    let l:matchnext = searchpos(@/, 'wnc')
-    if (l:matchstart[0] != 0) && (l:matchend[0] != 0)
-    return ((l:matchend[1] < l:matchnext[1]) || (l:matchnext[1] <= l:matchstart[1])) && (l:matchstart[0] == l:matchend[0])
-endif
-return 0
-" return (col('.') < ( l:matchpos[1] + l:matchlen )) && (line('.') == l:matchpos[0])
+    " let l:matchstart = searchpos(@/, 'Wncb')
+    " " forward search until the first matching tail (e), including cursor on tail (c)
+    " let l:matchend = searchpos(@/, 'Wnce')
+    " let l:matchnext = searchpos(@/, 'wnc')
+    " if (l:matchstart[0] != 0) && (l:matchend[0] != 0)
+    "     return ((l:matchend[1] < l:matchnext[1]) || (l:matchnext[1] <= l:matchstart[1])) && (l:matchstart[0] == l:matchend[0])
+    " endif
+    " return 0
+    " new implementation using MatchAllPos
+    for l:match in MatchAllPos()
+        if IsCursorInsideMatch(l:match)
+            return 1
+        endif
+    endfor
+    return 0
 endfunction
+
+" Function to find all match positions
+let g:verity_match_positions = []
+function! MatchAllPos() abort
+    let g:verity_match_positions = []
+    let l:oldpos = getpos('.')
+    silent execute '%s/' . @/ . '/\=RegisterMatchPos()/n'
+    call setpos('.', l:oldpos)
+    " for l:match in g:verity_match_positions
+    "     echo 'Start: ' . l:match.start[0] . ', ' . l:match.start[1] . '\nEnd: ' . l:match.end[0] . ', ' . l:match.end[1]
+    " endfor
+    return g:verity_match_positions
+endfunction
+
+function! RegisterMatchPos() abort
+    let start_pos = getpos('.')
+    let start_lineEnd = col('$')
+    let matched_text = submatch(0)
+    let start_line = start_pos[1]
+    let start_col = start_pos[2]
+    let end_line = start_line
+    let end_col = start_col
+    " Split the matched text by newlines
+    let lines = split(matched_text, "\n")
+    " If the match spans multiple lines
+    if len(lines) > 1
+        " Update the end line to the last line of the match
+        " let end_line = start_line + count(matched_text, "\n")
+        if start_lineEnd == start_pos[2]
+            let end_line = start_line + len(lines)
+        else
+            let end_line = start_line + len(lines) - 1
+        endif
+        " The end column is the length of the last line of the match
+        let end_col = len(lines[-1])
+    else
+        " If the match is within a single line, update the end column
+        let end_col = start_col + len(matched_text) - 1
+    endif
+    echo 'start: (' . start_line . ', ' . start_col . ' )' . 'end: (' . end_line . ', ' . end_col . ' )'
+
+    " Append the positions to the global verity_match_positions array
+    call add(g:verity_match_positions, {'start': [start_line, start_col], 'end': [end_line, end_col]})
+
+    " Return the matched text to keep the substitution operation transparent
+    return submatch(0)
+endfunction
+
+
 " nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
 " matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
 nnoremap <expr> <C-r> IsOnMatch() ? ':let @h=@/<CR>:call ReplaceWithInput()<CR>' : '<C-r>'
 
 " select field separated by ,/;(){}[]<>
 function! SepHLSearch()
-    let [_, l:startLine, l:startCol, _] = getcharpos("'<")
-    let [_, l:endLine, l:endCol, _] = getcharpos("'>")
-    " let @/ = '\%' . l:startLine . 'l\%>' . (l:startCol-1) . 'c\_[^,(){}\[\]><+-*/; \t\n\r]\+' . '\%' . l:endLine . 'l\%<' . (l:endCol+2) . 'c'
-    " let @/ = '\%>' . (l:startLine-1) . 'l\%>' . (l:startCol-1) . 'c\(\k\|\i\)\+' . '\%<' . (l:endLine+1) . 'l\%<' . (l:endCol+2) . 'c'
-    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)[^,;]\+' . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
+    " TODO try include (?!\s+(?:,|;))[^,;] and [^,;](?<!(?:,|;)\s+) into the pattern (but in god forsaken vim regex) for excluding ,/; bordering whitespace
+    let @/ = '\%V[^,;]\+'
+    call SolidifyHighlight()
 endfunction
 " vnoremap <leader>ps <Esc>/\%V[^,(){}\[\]><;]\+\%V<CR>
 " vnoremap <leader>ps :s/[^,(){}\[\]><;]\+/\1/<CR>v
@@ -689,6 +763,32 @@ nnoremap <leader>h} vi}:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h{ vi{:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 
 
+" Ctrl+n to select matched text
+function! FindNearestMatch(flag) abort
+    let l:pos_ls = MatchAllPos()
+    let current_pos = getpos('.')
+    let current_line = current_pos[1]
+    let current_col = current_pos[2]
+    " Initialize variables to track the nearest match
+    let nearest_match = {}
+    let min_distance = -1
+    let l:prev_match = {}
+    if flag
+
+
+    " Iterate over all matches
+    for l:match in l:pos_ls
+        if IsCursorInsideMatch(l:match)
+            return l:match
+        endif
+        if l:match.end[0] <
+        let start_pos = l:match.start
+        let end_pos = l:match.end
+        let l:prev_match = l:match
+    endfor
+    " Return the nearest match if found, otherwise return an empty dict
+    return empty(nearest_match) ? {} : nearest_match
+endfunction
 " Ctrl+n to select matched text
 nnoremap <expr> <Plug>VerityHighlightNext IsOnMatch() ? ":call search(@/, 'bc')<CR>v//e<CR>" : '//<CR>v//e<CR>'
 vnoremap <Plug>VerityHighlightNext v//<CR>v//e<CR>
@@ -781,7 +881,15 @@ vnoremap > >gv^
 vnoremap < <gv^
 
 " temporarily cancel all highlight from search, it'll come back on next search
-nnoremap <Leader>v :noh<CR>
+
+function! SolidifyHighlight()
+    let [_, l:startLine, l:startCol, _] = getcharpos("'<")
+    let [_, l:endLine, l:endCol, _] = getcharpos("'>")
+    let @/ = substitute(@/, '\\%V', '', 'g')
+    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . @/ . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
+endfunction
+nnoremap <Leader>hh  :call SolidifyHighlight()<CR>
+nnoremap <leader>v :set hlsearch!<CR>
 
 " search for selected text in visual mode
 nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
@@ -1040,7 +1148,7 @@ endfunction
 " open mapping buffer
 nnoremap <leader>m :call OpenTempBuffer('map', '%!sort -k1.4,1.4')<CR>
 " open highlight buffer
-nnoremap <leader>hh :call OpenTempBuffer('highlight')<CR>
+" nnoremap <leader>hh :call OpenTempBuffer('highlight')<CR>
 
 
 " alternative to map search hk: <\m>
