@@ -17,3 +17,6 @@ Thumbs.db
 .cfg
 .config/libreoffice/4/user/uno_packages/cache
 .npm/_cacache
+
+# generated files
+tags
