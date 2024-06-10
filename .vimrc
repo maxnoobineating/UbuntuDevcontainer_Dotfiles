@@ -1,3 +1,4 @@
+" gf to go to file
 source ~/.vim/vim/general_settings.vim
 source ~/.vim/vim/plugin_configs.vim
 source ~/.vim/vim/functions.vim

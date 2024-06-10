@@ -630,7 +630,7 @@ c.TerminalInteractiveShell.colors = 'Neutral'
 
 ## Shortcut style to use at the prompt. 'vi' or 'emacs'.
 #  Default: 'emacs'
-# c.TerminalInteractiveShell.editing_mode = 'emacs'
+c.TerminalInteractiveShell.editing_mode = 'vi'
 
 ## Set the editor used by IPython (default to $EDITOR/vi/notepad).
 #  Default: 'vi'
@@ -735,7 +735,7 @@ c.TerminalInteractiveShell.highlight_matching_brackets = True
 
 ## Display the current vi mode (when using vi editing mode).
 #  Default: True
-# c.TerminalInteractiveShell.prompt_includes_vi_mode = True
+c.TerminalInteractiveShell.prompt_includes_vi_mode = True
 
 ## The format for line numbering, will be passed `line` (int, 1 based) the
 #  current line number and `rel_line` the relative line number. for example to

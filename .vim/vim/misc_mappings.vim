@@ -42,10 +42,12 @@ nnoremap <C-w><C-j> :wincmd j<CR>:call ResizeHorizontal(75)<CR>
 nnoremap <C-w><C-k> :wincmd k<CR>:call ResizeHorizontal(75)<CR>
 nnoremap <C-w><C-l> :wincmd l<CR>:call ResizeVertical(75)<CR>
 
+" TODO implement proper ParameterField function
 " change in , separated
 " nnoremap ci, v/\([^,]*?\K[)\]}]|)
 " nnoremap ci, vi):<C-u>call SepHLSearch()<CR><C-o>
-nmap ci, ,h)<C-o><C-n>c
+nmap ci, ,h)<C-o><C-n>c<C-o>:noh<CR>
+" nmap di, ,h)
 
 " move tab
 nnoremap <C-w>< :tabmove -1<CR>
@@ -67,21 +69,29 @@ nnoremap <leader>ul U
 nnoremap U <C-r>
 
 " selection replacement
-function! ReplaceWithInput()
+function! ReplaceWithInput() abort
     " put cursor on the head of matched pattern
+    let choice = confirm("Replacing highlighted text?", "&Yes\n&No\n&Quit", 1)
+    if choice != 1
+        return 0
+    endif
     call search(@h, 'bc')
     let l:cuscol = col('.')
     let l:cusline = line('.')
     let l:text = input('Enter replacement text: ')
     let l:old_pattern = getreg('h')
     " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
-    execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:text . '/c' 
-    execute '1,' . l:cusline . 's/' . l:old_pattern . '/' . l:text . '/c'
+    execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:text . '/ce'
+    echo 'wrapped around EOF'
+    execute '1,' . l:cusline . 's/' . l:old_pattern . '/' . l:text . '/ce'
 endfunction
-vnoremap <C-r> "hy:<C-u>call ReplaceWithinput()<CR>
+vnoremap <silent> <C-r> "hy:<C-u>silent call ReplaceWithinput()<CR>
 " if cursor on top of match highlights, enter replacing commands
+" nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
+" matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
+nnoremap <silent> <expr> <C-r> IsOnMatch() ? ':let @h=@/<CR>:call ReplaceWithInput()<CR>' : '<C-r>'
 
-function! CursorOutsideMatch(match)
+function! CursorOutsideMatch(match) abort
     " return 0 if cursor on match, 1 if match after cursor, -1 vice versa
     let l:curline = getpos('.')[1]
     let l:curcol = getpos('.')[2]
@@ -103,7 +113,7 @@ function! CursorOutsideMatch(match)
     return 0
 endfunction
 " return the match under cursor if matched, else {}
-function! MatchUnderCursor()
+function! MatchUnderCursor() abort
     " THIS DOESN'T WORK WITH MULTILINE PATTERNS, fck Vim weirdness... why is getting matched text position so hard!?
     " n: nojump, c: include first char of match, b: search behind
     " backward search (b) until the first matching head ( works for cursor on the match and on the match head (c) )
@@ -123,8 +133,15 @@ function! MatchUnderCursor()
     endfor
     return {}
 endfunction
-function! IsOnMatch()
-    return !empty(MatchUnderCursor())
+
+function! IsOnMatch() abort
+    if !&hlsearch
+        return 0
+    endif
+    if search(@/, 'cbwn')
+        return !empty(MatchUnderCursor())
+    endif
+    return 0
 endfunction
 
 " Function to find all match positions
@@ -132,7 +149,7 @@ let g:verity_match_positions = []
 function! MatchAllPos() abort
     let g:verity_match_positions = []
     let l:oldpos = getpos('.')
-    silent execute '%s/' . @/ . '/\=RegisterMatchPos()/n'
+    silent execute '%s/' . @/ . '/\=RegisterMatchPos()/ne'
     call setpos('.', l:oldpos)
     " for l:match in g:verity_match_positions
     "     echo 'Start: ' . l:match.start[0] . ', ' . l:match.start[1] . '\nEnd: ' . l:match.end[0] . ', ' . l:match.end[1]
@@ -168,11 +185,6 @@ function! RegisterMatchPos() abort
     " Return the matched text to keep the substitution operation transparent
     return l:matched_text
 endfunction
-
-
-" nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
-" matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
-nnoremap <expr> <C-r> IsOnMatch() ? ':let @h=@/<CR>:call ReplaceWithInput()<CR>' : '<C-r>'
 
 " select field separated by ,/;(){}[]<>
 function! SepHLSearch()
@@ -211,7 +223,7 @@ function! NearestMatch(flag) abort
     endfor
     return {}
 endfunction
-function! SelectNextMatch(flag)
+function! SelectNextMatch(flag) abort
     let l:next_match = NearestMatch(a:flag)
     if empty(l:next_match)
         return 0
@@ -221,21 +233,21 @@ function! SelectNextMatch(flag)
     execute 'normal! v' . l:next_match.start[0] . 'G' . l:next_match.start[1] . '|o' . l:next_match.end[0] . 'G' . l:next_match.end[1] . "|\<Esc>gv"
     " call input( 'range: ' . getpos("'<")[1] . ', ' . getpos("'<")[2])
 endfunction
-function! IsSelected()
+function! IsSelected() abort
     let l:current_match = NearestMatch(0)
     if empty(l:current_match)
         return 0
     endif
     return getpos("'<")[1:2] == l:current_match.start && getpos("'>")[1:2] == l:current_match.end
 endfunction
-function! VerityHighlight_N(flag)
+function! VerityHighlight_N(flag) abort
     if IsOnMatch()
         call SelectNextMatch(0)
     else
         call SelectNextMatch(a:flag)
     endif
 endfunction
-function! VerityHighlight_V(flag)
+function! VerityHighlight_V(flag) abort
     if !IsSelected() && IsOnMatch()
         call SelectNextMatch(0)
     else
@@ -248,10 +260,10 @@ nnoremap <silent> <Plug>VerityHighlightNext_N :call VerityHighlight_N(1)<CR>
 vnoremap <silent> <Plug>VerityHighlightNext_V <Esc>:call VerityHighlight_V(1)<CR>
 nnoremap <silent> <Plug>VerityHighlightPrev_N :call VerityHighlight_N(-1)<CR>
 vnoremap <silent> <Plug>VerityHighlightPrev_V <Esc>:call VerityHighlight_V(-1)<CR>
-nmap <C-n> <Plug>VerityHighlightNext_N
-vmap <C-n> <Plug>VerityHighlightNext_V
-nmap <C-p> <Plug>VerityHighlightPrev_N
-vmap <C-p> <Plug>VerityHighlightPrev_V
+nmap <silent> <C-n> <Plug>VerityHighlightNext_N
+vmap <silent> <C-n> <Plug>VerityHighlightNext_V
+nmap <silent> <C-p> <Plug>VerityHighlightPrev_N
+vmap <silent> <C-p> <Plug>VerityHighlightPrev_V
 
 " visual to the end don't enclude newline
 vnoremap _ $
