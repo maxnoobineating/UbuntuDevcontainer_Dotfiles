@@ -1,3 +1,9 @@
+" folding method
+set foldmethod=syntax
+
+" update time for more frequent gitgutter update
+set updatetime=500
+
 " jump to existing buffer first
 set switchbuf=usetab
 
@@ -259,4 +265,3 @@ if &term =~ '^xterm'
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
-

@@ -81,6 +81,8 @@ call plug#begin('~/.vim/plugged')
                 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
                 Plug 'junegunn/fzf.vim'
 
+                " git gutter
+                Plug 'airblade/vim-gitgutter'
 
                 " Run PlugInstall if there are missing plugins
                 " https://github.com/junegunn/vim-plug/wiki/tips#automatic-installation
@@ -243,9 +245,9 @@ augroup Cocgroup
 augroup end
 " GoTo code navigation
 nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+" nmap <silent> gy <Plug>(coc-type-definition)
+" nmap <silent> gi <Plug>(coc-implementation)
+" nmap <silent> gr <Plug>(coc-references)
 " auto rename
 nmap <leader>rn <Plug>(coc-rename)
 " auto formatting

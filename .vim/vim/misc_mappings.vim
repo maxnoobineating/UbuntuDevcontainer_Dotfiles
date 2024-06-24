@@ -526,6 +526,11 @@ imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
 nmap <C-c> viwc
 nmap <C-x> viWc
+
+" increment/decrement alternatives
+nnoremap gi <C-a>
+nnoremap gx <C-x>
+
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
 nmap <C-D> viWd

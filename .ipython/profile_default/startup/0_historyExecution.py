@@ -37,7 +37,10 @@ if system_return_value == 0:
         print()
         confirmation = input('press y/Y to execute: ')
         if confirmation in ['y', 'Y']:
-            exec(commands)
+            # exec(commands)
+            # this will cause error: `ERROR! Session/line number was not unique in database. History logging moved to new session nnn`
+            # ipython.history_manager.store_inputs(ipython.execution_count, commands)
+            ipython.run_cell(commands)
 
 # Remember to delete the temporary file when you're done with it
 os.remove(temp_name)
