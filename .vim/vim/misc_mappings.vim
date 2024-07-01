@@ -421,32 +421,32 @@ endfunction
 
 " Clipboard settingss
 " Check if X11 is installed
-if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
-    " echo "X11 is installed. adopted system clipboard"
-    "setting clipboard
-    set clipboard=unnamedplus
-    set clipboard+=unnamed
-    " Use the OS clipboard by default (on versions compiled with `+clipboard`)
-    " set clipboard=unnamed
+"if SystemCall('dpkg -l | grep xorg > /dev/null 2>&1')
+"    " echo "X11 is installed. adopted system clipboard"
+"    "setting clipboard
+"    set clipboard=unnamedplus
+"    set clipboard+=unnamed
+"    " Use the OS clipboard by default (on versions compiled with `+clipboard`)
+"    " set clipboard=unnamed
 
-    " yanking to system clipboard
-    vnoremap Y "+y
-    noremap YY "+yy
+"    " yanking to system clipboard
+"    vnoremap Y "+y
+"    noremap YY "+yy
 
-    noremap <nowait> p gp
-    noremap <nowait> P "+gp
-    noremap gp p
-    noremap gP "+p
-    vnoremap gP "+P
-    " pls reserve mm for this
-    vnoremap <nowait> p mmgPv`mo
-    vnoremap <nowait> P mm"+gPv`mo
+"    noremap <nowait> p gp
+"    noremap <nowait> P "+gp
+"    noremap gp p
+"    noremap gP "+p
+"    vnoremap gP "+P
+"    " pls reserve mm for this
+"    vnoremap <nowait> p mmgPv`mo
+"    vnoremap <nowait> P mm"+gPv`mo
 
-    " In visual mode, 'D' cuts the selection and puts it in the system clipboard
-    vnoremap D "+x
-    " In normal mode, 'DD' cuts the line and puts it in the system clipboard
-    nnoremap DD "+dd
-else
+"    " In visual mode, 'D' cuts the selection and puts it in the system clipboard
+"    vnoremap D "+x
+"    " In normal mode, 'DD' cuts the line and puts it in the system clipboard
+"    nnoremap DD "+dd
+"else
     " YDP store into vim unamed register, and vim-tmux-register plugin will sync them to tmux buffer
     " you can go into tmux, <Leader>b to :show-buffer and copy it down (in windows terminal, Enter also copies)
     " (because tmux select is recognized by the terminal unlike vim select)
@@ -469,7 +469,8 @@ else
 
     vnoremap D "0x
     nnoremap DD "0dd
-endif
+" endif
+" 6/28/2024, dunno why but the SystemCall check suddenly passed without X11, disabling it
 
 " custom host yank support
 let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
