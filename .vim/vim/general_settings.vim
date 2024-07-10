@@ -190,10 +190,25 @@ set number
 syntax on
 " Highlight current line
 set cursorline
+
 " change tabs to 4 spaces
 set expandtab
 set tabstop=4
 set shiftwidth=4
+" File type specific settings
+augroup filetype_indent
+  autocmd!
+  autocmd BufEnter *.vim setlocal expandtab tabstop=2 shiftwidth=2
+  " Python specific settings
+  autocmd BufEnter *.py setlocal expandtab tabstop=4 shiftwidth=4
+  " JavaScript specific settings
+  autocmd BufEnter *.js setlocal expandtab tabstop=2 shiftwidth=2
+  " C specific settings
+  autocmd BufEnter *.c setlocal expandtab tabstop=2 shiftwidth=2
+  autocmd BufEnter *.cpp setlocal expandtab tabstop=2 shiftwidth=2
+  autocmd BufEnter * execute 'IndentLinesReset'
+augroup END
+
 " Show “invisible” characters
 set lcs=tab:▸\ ,trail:·,eol:¬,nbsp:_
 set list

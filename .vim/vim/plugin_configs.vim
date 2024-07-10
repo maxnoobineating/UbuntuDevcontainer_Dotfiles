@@ -9,14 +9,14 @@ call plug#begin('~/.vim/plugged')
                     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
                 endif
 
-				Plug 'mhinz/vim-startify'
+                Plug 'mhinz/vim-startify'
 
                 Plug 'dense-analysis/ale'
 
-				Plug 'neoclide/coc.nvim', { 'branch': 'release' }
-				Plug 'easymotion/vim-easymotion'
+                Plug 'neoclide/coc.nvim', { 'branch': 'release' }
+                Plug 'easymotion/vim-easymotion'
 
-				Plug 'jiangmiao/auto-pairs'
+                Plug 'jiangmiao/auto-pairs'
 
                 " requires API keys, or it'll neg you
                 Plug 'wakatime/vim-wakatime'
@@ -135,14 +135,29 @@ let g:python_highlight_all = 1
 " let g:ale_disable_lsp = 1
 " 1 for enabling all linters
 let g:ale_linters_explicit = 0
-let g:ale_linters = {'javascript': [], 'python': ['flake8'], 'rust': [], 'go': [], 'bash': ['shellcheck'], 'sh': ['shellcheck'], 'tex': ['chktex']}
-let g:ale_fixers = {'bash': ['shfmt'], 'sh': ['shfmt'], 'python': ['autoflake']}
+let g:ale_linters = {'javascript': [],
+            \ 'python': ['flake8'],
+            \ 'rust': [],
+            \ 'go': [],
+            \ 'bash': ['shellcheck'],
+            \ 'sh': ['shellcheck'],
+            \ 'tex': ['chktex'],
+            \ 'c': ['gcc', 'clang'],
+            \ 'cpp': ['g++', 'clang++']}
+let g:ale_fixers = {'bash': ['shfmt'],
+      \ 'sh': ['shfmt'],
+      \ 'python': ['autoflake'],
+      \ 'c': ['clang-format'],
+      \ 'cpp': ['clang-format']}
 let g:ale_sign_error = '>>'
 let g:ale_sign_warning = '--'
 let g:ale_lint_on_text_changed = 'always'
+" better C/C++ linting
+let g:ale_cpp_clangd_executable = 'clangd'
 
 
 " indentline config
+let g:indentLine_autoResetWidth = 1
 " let g:indentLine_setColors = 0
 " Vim
 let g:indentLine_color_term = 249
@@ -216,7 +231,9 @@ let g:coc_disable_startup_warning = 1
 " set selection highlight
 let g:coc_global_extensions = [
 \ 'coc-pyright',
-\ 'coc-json'
+\ 'coc-json',
+\ 'coc-clangd',
+\ 'coc-snippets'
 \ ]
 let g:coc_start_at_startup = 1
 set timeout timeoutlen=600 ttimeoutlen=100
@@ -234,7 +251,7 @@ nmap <silent> <C-k> <Plug>(coc-diagnostic-prev-error)
 " com! Err call s:Err()      " Enable :ShowMaps to call the function
 " nnoremap <expr> <Leader>e :CocE<CR>
 " nnoremap <leader>e <Plug>(coc-diagnostic-info)
-nnoremap <leader>e :call CocAction('diagnosticToggle')<CR>
+nnoremap <leader>e :call CocAction('diagnosticToggle')<CR>:ALEToggle<CR>
 
 augroup Cocgroup
   autocmd!

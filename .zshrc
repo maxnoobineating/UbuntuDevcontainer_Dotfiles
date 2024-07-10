@@ -274,6 +274,7 @@ alias hist10="history 1 | awk '{\$1=\"\";print substr(\$0,2)}' | sort | uniq -c 
 alias sl=ls
 alias dc=cd
 alias py=ipython
+alias python='python3'
 
 
 # command in-line substitution disable?

@@ -42,12 +42,6 @@ nnoremap <C-w><C-j> :wincmd j<CR>:call ResizeHorizontal(75)<CR>
 nnoremap <C-w><C-k> :wincmd k<CR>:call ResizeHorizontal(75)<CR>
 nnoremap <C-w><C-l> :wincmd l<CR>:call ResizeVertical(75)<CR>
 
-" TODO implement proper ParameterField function
-" change in , separated
-" nnoremap ci, v/\([^,]*?\K[)\]}]|)
-" nnoremap ci, vi):<C-u>call SepHLSearch()<CR><C-o>
-nmap ci, ,h)<C-o><C-n>c<C-o>:noh<CR>
-" nmap di, ,h)
 
 " move tab
 nnoremap <C-w>< :tabmove -1<CR>
@@ -186,22 +180,6 @@ function! RegisterMatchPos() abort
     return l:matched_text
 endfunction
 
-" select field separated by ,/;(){}[]<>
-function! SepHLSearch()
-    " TODO try include (?!\s+(?:,|;))[^,;] and [^,;](?<!(?:,|;)\s+) into the pattern (but in god forsaken vim regex) for excluding ,/; bordering whitespace
-    let @/ = '\%V[^,;]\+'
-    call SolidifyHighlight()
-endfunction
-" vnoremap <leader>ps <Esc>/\%V[^,(){}\[\]><;]\+\%V<CR>
-" vnoremap <leader>ps :s/[^,(){}\[\]><;]\+/\1/<CR>v
-vnoremap <leader>hv :<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h) vi):<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h( vi(:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h] vi]:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h[ vi[:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h} vi}:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-nnoremap <leader>h{ vi{:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
-
 
 " Ctrl+n to select matched text
 function! NearestMatch(flag) abort
@@ -269,23 +247,11 @@ vmap <silent> <C-p> <Plug>VerityHighlightPrev_V
 vnoremap _ $
 vnoremap - $h
 
+
 " two way expansion of visual selection
 vnoremap L <Esc>`<v`>loho
 vnoremap H <Esc>`<v`>holo
 
-" select around symbols
-vnoremap i, t,ot,o
-vnoremap a, f,oF,o
-vnoremap i. t.oT.o
-vnoremap a. f.oF.o
-vnoremap i_ t_oT_o
-vnoremap a_ f_oF_o
-vnoremap i- t-oT-o
-vnoremap a- f-oF-o
-vnoremap i/ t/oT/o
-vnoremap a/ f/oF/o
-vnoremap i\ t\oT\o
-vnoremap a\ f\oF\o
 
 " C-u C-r in insert mode for undo/redo
 inoremap <C-u> <C-o>u
@@ -342,21 +308,12 @@ nnoremap L )
 vnoremap > >gv^
 vnoremap < <gv^
 
-" temporarily cancel all highlight from search, it'll come back on next search
-
-function! SolidifyHighlight()
-    let [_, l:startLine, l:startCol, _] = getcharpos("'<")
-    let [_, l:endLine, l:endCol, _] = getcharpos("'>")
-    let @/ = substitute(@/, '\\%V', '', 'g')
-    let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . @/ . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
-endfunction
-nnoremap <Leader>hh  :call SolidifyHighlight()<CR>
-nnoremap <leader>v :set hlsearch!<CR>
 
 " search for selected text in visual mode
 nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
 nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
 vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
+
 
 " toggle number sidebar (for more easily tmux select)
 let g:signcolumn_toggle_state = 'no'
@@ -458,6 +415,7 @@ endfunction
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
     " visual mode paste should select the pasted content
     " first, fix cursor position after paste (default is - to the end if pasting no linebreak, to the begining of the next line if pasting linebreaks)
+
     noremap <nowait> p gp
     noremap <nowait> P "0gp
     noremap gp p
@@ -550,6 +508,8 @@ inoremap <C-]> <C-D>
 " next/prev buffer
 noremap <leader>bn :bn<CR>
 noremap <leader>bp :bp<CR>
+" open cuurent buffer into new tab
+nnoremap <leader>bt :tab split<CR>
 
 noremap <C-Up> <C-Y>
 noremap <C-Down> <C-E>

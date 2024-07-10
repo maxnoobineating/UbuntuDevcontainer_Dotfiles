@@ -52,3 +52,7 @@ Source: Conversation with Bing, 10/3/2023
 (3) How to handle big repositories with Git | Atlassian Git Tutorial. https://www.atlassian.com/git/tutorials/big-repositories.
 (4) .gitignore file - ignoring files in Git | Atlassian Git Tutorial. https://www.atlassian.com/git/tutorials/saving-changes/gitignore.
 (5) undefined. http://bit.do/cfg-init.
+
+## TODO:
+(1) automate Coc extension installation:
+    - C/C++: clangd
