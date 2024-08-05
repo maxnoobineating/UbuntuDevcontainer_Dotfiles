@@ -1,18 +1,44 @@
+" search for selected text in visual mode
+nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
+nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
+" vnoremap * y:let @/ = "\\M" . substitute(substitute(@" , '\n', '\\n', 'g'), '/', '\/', 'g') . "\\m"<CR>:set hlsearch<CR>
+vnoremap * y:let @/ = "\\M" . substitute(escape(@", '\/$'), '\n', '\\n', 'g') . "\\m"<CR>:set hlsearch<CR>
+vmap <Plug>(VerityHighlight_Plug_HighlightSelect) *
+" vnoremap * y:let @/ =  @"<CR>:set hlsearch<CR>
+
+
 function! VerityHighlight_restrictPattern(startpos, endpos, pattern)
   let [l:startLine, l:startCol] = a:startpos
   let [l:endLine, l:endCol] = a:endpos
   return '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
 endfunction
 
-function! VerityHighlight_SolidifyHighlight()
+function! VerityHighlight_SolidifiedPattern(pattern)
   let [_, l:startLine, l:startCol, _] = getcharpos("'<")
   let [_, l:endLine, l:endCol, _] = getcharpos("'>")
-  let @/ = substitute(@/, '\\%V', '', 'g')
+  let l:pattern = substitute(a:pattern, '\\%V', '', 'g')
+  let l:ending_line = getline(l:endLine)
+  if l:endCol >= len(l:ending_line)
+    " region restriction after \n is counted as next line, although visual selection is counting \n at the same line
+    let l:pattern = VerityHighlight_restrictPattern([l:startLine, l:startCol], [l:endLine+1, 0], l:pattern)
+  else
   " let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . @/ . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
-  let @/ = VerityHighlight_restrictPattern([l:startLine, l:startCol], [l:endLine, l:endCol], @/)
+    let l:pattern = VerityHighlight_restrictPattern([l:startLine, l:startCol], [l:endLine, l:endCol], l:pattern)
+  endif
+  return l:pattern
+endfunction
+
+function! VerityHighlight_SolidifyHighlight()
+  " let [_, l:startLine, l:startCol, _] = getcharpos("'<")
+  " let [_, l:endLine, l:endCol, _] = getcharpos("'>")
+  " let @/ = substitute(@/, '\\%V', '', 'g')
+  " " let @/ = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . @/ . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
+  " let @/ = VerityHighlight_restrictPattern([l:startLine, l:startCol], [l:endLine, l:endCol], @/)
+  let @/ = VerityHighlight_SolidifiedPattern(@/)
 endfunction
 
 nnoremap <Leader>hh  :call VerityHighlight_SolidifyHighlight()<CR>
+nmap <Plug>(VerityHighlight_Plug_SolidifyHighlight) <leader>hh
 vnoremap <Leader>hh  :<C-u>call VerityHighlight_SolidifyHighlight()<CR>
 " temporarily cancel all highlight from search, it'll come back on next search
 nnoremap <leader>v :set hlsearch!<CR>
@@ -48,16 +74,59 @@ function! VerityHighlight_listOfFieldPosInsidePairs(start_pair, separator, end_p
 endfunction
 
 function! VerityHighlight_appendPattern(main, append)
-  return '\(' . a:main . '\)|\(' . a:append . '\)'
+  return '\(' . a:main . '\)\|\(' . a:append . '\)'
 endfunction
-
 function! VerityHighlight_concatenatePattern(pattern_list)
+  if len(pattern_list) < 1
+    return ''
+  endif
   let l:result = '\(' . a:pattern_list[0] . '\)'
   for l:pattern in a:pattern_list[1:]
-    l:result = l:result . '|\(' . l:pattern . '\)'
+    let l:result = l:result . '\|\(' . l:pattern . '\)'
   endfor
   return l:result
 endfunction
+
+
+let g:VerityHighlight_HighlightAdd_storedHighlight = []
+function! VerityHighlight_HighlightShow()
+  let @/ = VerityHighlight_concatenatePattern(g:VerityHighlight_HighlightAdd_storedHighlight)
+endfunction
+
+function! VerityHighlight_HighlightAdd()
+  " let g:VerityHighlight_HighlightAdd_timerId = timer_start(500, "VerityHighlight_HighlightAdd_callBack",{"repeat": -1})
+  if (strlen(@/) > 1024) && (confirm('Adding potentially nested large pattern, are you sure?', '&Yes\n&No', 1) == 2)
+    return 0
+  endif
+  let g:VerityHighlight_HighlightAdd_storedHighlight = g:VerityHighlight_HighlightAdd_storedHighlight + [@/]
+  call VerityHighlight_HighlightShow()
+endfunction
+
+function! VerityHighlight_HighlightPop()
+  if len(g:VerityHighlight_HighlightAdd_storedHighlight) >= 0
+    echo g:VerityHighlight_HighlightAdd_storedHighlight[-1]
+    let l:poped = remove(g:VerityHighlight_HighlightAdd_storedHighlight, len(g:VerityHighlight_HighlightAdd_storedHighlight)-1)
+    call VerityHighlight_HighlightShow()
+    return l:poped
+  else
+    echo "VerityHighlight_HighlightAdd_storedHighlight already clean"
+    call VerityHighlight_HighlightShow()
+    return ''
+  endif
+endfunction
+
+function! VerityHighlight_HighlightClear()
+  let g:VerityHighlight_HighlightAdd_storedHighlight = []
+  call VerityHighlight_HighlightShow()
+  echo "VerityHighlight_HighlightAdd_storedHighlight cleared"
+endfunction
+
+nnoremap <leader>h+ :call VerityHighlight_HighlightAdd()<CR>
+nmap <Plug>(VerityHighlight_Plug_HighlightAdd) <leader>h+
+vmap <leader>h+ <Plug>(VerityHighlight_Plug_HighlightSelect)<Plug>(VerityHighlight_Plug_HighlightAdd)
+nnoremap <leader>h- :call VerityHighlight_HighlightPop()<CR>
+nnoremap <leader>hd :call VerityHighlight_HighlightClear()<CR>
+
 
 function! VerityHighlight_inRegion(region_list)
 endfunction

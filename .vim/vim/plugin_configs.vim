@@ -90,12 +90,16 @@ call plug#begin('~/.vim/plugged')
                 \| PlugInstall --sync | source $MYVIMRC
                 \| endif
 
+                " undo tree
+                Plug 'mbbill/undotree'
+
 call plug#end()
 
 
 " ############################# "
 " Plugin mapping & configuration:
-
+" Gundo
+nnoremap <F5> :UndotreeToggle<CR>
 
 " fzf.vim
 " Initialize configuration dictionary
@@ -214,7 +218,11 @@ augroup END
 
 " =======================================================================================================
 " NerdTree
-nnoremap <leader>n :NERDTreeFocus<CR>
+" nnoremap <leader>n :NERDTreeFocus<CR>
+nnoremap <leader>n :NERDTreeFind<CR>
+let g:NERDTreeShowHidden=1
+let g:NERDTreeMinimalUI=1
+let g:NERDTreeDirArrows=1
 
 " =======================================================================================================
 " Simpylfold, unfold all after fold creation (every new session)
@@ -262,14 +270,26 @@ augroup Cocgroup
 augroup end
 " GoTo code navigation
 nmap <silent> gd <Plug>(coc-definition)
-" nmap <silent> gy <Plug>(coc-type-definition)
-" nmap <silent> gi <Plug>(coc-implementation)
-" nmap <silent> gr <Plug>(coc-references)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
 " auto rename
 nmap <leader>rn <Plug>(coc-rename)
 " auto formatting
 nnoremap <leader>af <plug>(coc-format-selected)
 vnoremap <leader>af <plug>(coc-format-selected)
+
+" Applying code actions to the selected code block
+" Example: `<leader>aap` for current paragraph
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+nmap <leader>a  <Plug>(coc-codeaction-selected)
+
+" Remap keys for applying code actions at the cursor position
+nmap <leader>ac  <Plug>(coc-codeaction-cursor)
+" Remap keys for apply code actions affect whole buffer
+nmap <leader>as  <Plug>(coc-codeaction-source)
+" Apply the most preferred quickfix action to fix diagnostic on the current line
+nmap <leader>qf  <Plug>(coc-fix-current)
 
 " Use K to show documentation in preview window
 nnoremap <silent> <leader>d :call ShowDocumentation()<CR>

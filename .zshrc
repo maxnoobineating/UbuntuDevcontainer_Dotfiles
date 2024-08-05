@@ -275,7 +275,9 @@ alias sl=ls
 alias dc=cd
 alias py=ipython
 alias python='python3'
-
+alias info='info --vi-keys'
+alias wtf='tldr'
+alias asmcat='objdump -M intel -d --no-show-raw-insn -C -j .text'
 
 # command in-line substitution disable?
 # DISABLE_MAGIC_FUNCTIONS=true

@@ -1,6 +1,11 @@
 " #===================================================================================#
 " Mappings
 
+" space based mapping
+nnoremap <space><space> i<space><Esc>la<space><Esc>h
+vnoremap <space><space> <esc>`<i<space><Esc>`>la<space><Esc>`<lv`>l
+nnoremap <space>d f<space>xF<space>x
+
 " mapping yh
 function! ConfirmAndAppend(match)
     " Ask the user if they want to append the match to the register
@@ -72,7 +77,7 @@ function! ReplaceWithInput() abort
     call search(@h, 'bc')
     let l:cuscol = col('.')
     let l:cusline = line('.')
-    let l:text = input('Enter replacement text: ')
+    let l:text = escape(input('Enter replacement text: '), '\/.^$*[]~')
     let l:old_pattern = getreg('h')
     " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
     execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:text . '/ce'
@@ -309,12 +314,6 @@ vnoremap > >gv^
 vnoremap < <gv^
 
 
-" search for selected text in visual mode
-nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
-nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
-vnoremap * y:let @/ = @"<CR>:set hlsearch<CR>
-
-
 " toggle number sidebar (for more easily tmux select)
 let g:signcolumn_toggle_state = 'no'
 " nnoremap <expr> <f2> ":set number! relativenumber!"
@@ -433,13 +432,15 @@ endfunction
 " custom host yank support
 let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
 if filereadable(s:clipboard_export)
-    augroup WSLYank
-        autocmd!
-        " WSL
-        " autocmd TextYankPost * if v:event.operator ==# 'y' | call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export) | endif
-        autocmd TextYankPost * if v:event.operator =~# 'y' | call system('echo ' . shellescape(substitute(@0, '\n$', '', '')) . ' > ' . s:clipboard_export) | endif
-        " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' . s:clipboard_export | endif
-    augroup END
+  augroup WSLYank
+    autocmd!
+    " WSL
+    " autocmd TextYankPost * if v:event.operator ==# 'y' | call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export) | endif
+    " autocmd TextYankPost * if v:event.operator =~# 'y' | call system('echo ' . shellescape(substitute(@0, '\n$', '', '')) . ' > ' . s:clipboard_export) | endif
+    " to deal with '\0' literal, using echo will just interpret it as NULL character
+    autocmd TextYankPost * if v:event.operator =~# 'y' | call writefile(split(@0, '\(\n\|\n\r\)', 1), s:clipboard_export, 'b') | endif
+    " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' . s:clipboard_export | endif
+  augroup END
 endif
 
 
@@ -506,10 +507,12 @@ inoremap <C-]> <C-D>
 " inoremap <C-p> <C-r>"
 
 " next/prev buffer
-noremap <leader>bn :bn<CR>
-noremap <leader>bp :bp<CR>
+noremap <leader>bn :bp<CR>
+noremap <leader>bp :bn<CR>
 " open cuurent buffer into new tab
 nnoremap <leader>bt :tab split<CR>
+" unload current buffer
+nnoremap <leader>bd :bd<CR>
 
 noremap <C-Up> <C-Y>
 noremap <C-Down> <C-E>
@@ -539,7 +542,6 @@ endfunction
 " open mapping buffer
 nnoremap <leader>m :call OpenTempBuffer('map', '%!sort -k1.4,1.4')<CR>
 " open highlight buffer
-" nnoremap <leader>hh :call OpenTempBuffer('highlight')<CR>
 
 " Strip trailing whitespace (,sw)
 function! StripWhitespace()
