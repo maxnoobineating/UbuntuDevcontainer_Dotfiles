@@ -1,6 +1,14 @@
 " #===================================================================================#
 " Mappings
 
+" session management
+nnoremap <C-w><C-s> :mksession!<CR>
+" augroup SessionManagement
+"   autocmd!
+"   autocmd SessionLoadPost * source ~/.vimrc
+" augroup END
+
+
 " space based mapping
 nnoremap <space><space> i<space><Esc>la<space><Esc>h
 vnoremap <space><space> <esc>`<i<space><Esc>`>la<space><Esc>`<lv`>l
@@ -15,7 +23,7 @@ function! ConfirmAndAppend(match)
     return a:match  " Replace the match with itself
 endfunction
 " save all matching into register separated by \n
-nnoremap yh :let@0=''<CR>:%s//\=ConfirmAndAppend(submatch(0))/c<CR>
+nnoremap yh :let @0=''<CR>:%s//\=ConfirmAndAppend(submatch(0))/c<CR>doautocmd WSLYank TextYankPost<CR>
 
 " search pattern pre-fill
 " reserve s register for matched text
@@ -77,8 +85,8 @@ function! ReplaceWithInput() abort
     call search(@h, 'bc')
     let l:cuscol = col('.')
     let l:cusline = line('.')
-    let l:text = escape(input('Enter replacement text: '), '\/.^$*[]~')
-    let l:old_pattern = getreg('h')
+    let l:old_pattern = substitute(getreg('h'), '\\<\|\\>', '', 'g')
+    let l:text = escape(input('Enter replacement text: ', l:old_pattern), '\/.^$*[]~')
     " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
     execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:text . '/ce'
     echo 'wrapped around EOF'
@@ -511,6 +519,7 @@ noremap <leader>bn :bp<CR>
 noremap <leader>bp :bn<CR>
 " open cuurent buffer into new tab
 nnoremap <leader>bt :tab split<CR>
+nnoremap <leader>ba :tab sball<CR>
 " unload current buffer
 nnoremap <leader>bd :bd<CR>
 

@@ -4,7 +4,7 @@ nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
 " vnoremap * y:let @/ = "\\M" . substitute(substitute(@" , '\n', '\\n', 'g'), '/', '\/', 'g') . "\\m"<CR>:set hlsearch<CR>
 vnoremap * y:let @/ = "\\M" . substitute(escape(@", '\/$'), '\n', '\\n', 'g') . "\\m"<CR>:set hlsearch<CR>
 vmap <Plug>(VerityHighlight_Plug_HighlightSelect) *
-" vnoremap * y:let @/ =  @"<CR>:set hlsearch<CR>
+" vnoremap * y:let @/ =  @"<CR>:set hlsearch<CR>**
 
 
 function! VerityHighlight_restrictPattern(startpos, endpos, pattern)
@@ -77,7 +77,7 @@ function! VerityHighlight_appendPattern(main, append)
   return '\(' . a:main . '\)\|\(' . a:append . '\)'
 endfunction
 function! VerityHighlight_concatenatePattern(pattern_list)
-  if len(pattern_list) < 1
+  if len(a:pattern_list) < 1
     return ''
   endif
   let l:result = '\(' . a:pattern_list[0] . '\)'
