@@ -1,9 +1,53 @@
 "=============================================================================="
 " Functions
+" global set timeout so there's no state change bugs
+" just predeclaration, the initial value doesn't matter
+let g:changeFileType_savedtimeout = &timeout
+let g:changeFileType_savedtimeoutlen = &timeoutlen
+function! SetGlobalTimeoutSnapShot(timeout=&timeout, timeoutlen=&timeoutlen)
+  " put this at post_config
+  let g:changeFileType_savedtimeout = a:timeout
+  let g:changeFileType_savedtimeoutlen = a:timeoutlen
+  let &timeout = g:changeFileType_savedtimeout
+  let &timeoutlen = g:changeFileType_savedtimeoutlen
+endfunction
+
+function! SetGlobalTimeout(timeout, timeoutlen)
+  " put this at post_config
+  let &timeout = a:timeout
+  let &timeoutlen = a:timeoutlen
+endfunction
+
+autocmd! FileType nerdtree echom "NERDTree buffer entered" | autocmd FileType startify echom "Startify buffer entered"
+
+function! ResetGlobalTimeout()
+  let &timeout = g:changeFileType_savedtimeout
+  let &timeoutlen = g:changeFileType_savedtimeoutlen
+endfunction
+
+" timeout setting for certain filetype
+let g:setFileTypeTimeout_customizedList = []
+function! SetFiletypeTimeout(type, settimeout = v:true, settimeoutlen = &timeoutlen)
+  let g:setFileTypeTimeout_customizedList += [a:type]
+  " this only trigger when file is edited or created, so only entering will trigger
+  execute "autocmd! FileType " . a:type .
+        \ " let &timeout=" . a:settimeout .
+        \ " | set timeoutlen=" . a:settimeoutlen
+  autocmd! BufEnter * if index(g:setFileTypeTimeout_customizedList, &filetype) < 0
+        \ | echom "entering non-customized timeout buffer"
+        \ | call ResetGlobalTimeout()
+        \ | else
+        \ | echom "entering customized timeout buffer"
+        \ | endif
+endfunction
+
 " open tab with command, if already exists in tabs, switch to it
 function! TabDropCMD(cmd)
   execute "tab" . a:cmd
-  
+  let l:current_tabnr = tabpagenr()
+  let l:current_bufnr = bufnr()
+  " tabdo if len(tabpagebuflist()) == 1 && l:current_bufnr == bufnr() && l:current_tabnr != tabnr()
+  "       \ 
 endfunction
 
 " vim performance profiling:

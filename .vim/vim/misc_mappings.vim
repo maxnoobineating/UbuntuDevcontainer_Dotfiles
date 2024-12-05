@@ -31,6 +31,7 @@ function! OpenHelpFile()
   endif
   " execute "tab 'drop +help\ " . l:text . "'"
   execute "tab help " . l:text
+  execute "tag /" . l:text
   let l:current_tabnr = tabpagenr()
   let l:current_bufnr = bufnr()
   " tabdo if len(tabpagebuflist()) == 1 && l:current_bufnr == bufnr() && l:current_tabnr != tabnr()
@@ -38,7 +39,8 @@ function! OpenHelpFile()
 endfunction
 nnoremap <leader>? :call OpenHelpFile()<CR>
 augroup HelpPage
-  autocmd! FileType help nnoremap <buffer> <tab> :tnext<CR>
+  autocmd! FileType help nnoremap <buffer> <Enter> :tnext<CR>
+  autocmd! FileType help nnoremap <buffer> <backspace> :tprevious<CR>
 augroup END
 
 
@@ -529,7 +531,8 @@ endfunction
     " echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
     " yanking to system clipboard
     vnoremap y "0y
-    nnoremap yy "0yy
+    nnoremap y "0y
+    " nnoremap yy "0yy
 
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
     " visual mode paste should select the pasted content
@@ -545,7 +548,8 @@ endfunction
     vnoremap <nowait> P mp"0Pv`po
 
     vnoremap d "0x
-    nnoremap dd "0dd
+    nnoremap d "0d
+    " nnoremap dd "0dd
 
 " endif
 " 6/28/2024, dunno why but the SystemCall check suddenly passed without X11, disabling it

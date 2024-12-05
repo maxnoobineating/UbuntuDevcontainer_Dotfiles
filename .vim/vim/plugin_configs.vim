@@ -115,9 +115,10 @@ call plug#end()
 " startify
 " disable notimeout in startify, because the session indices selection no longer works (number pending further command indefinitely)
 augroup StartifyAug
-  autocmd! FileType startify set timeout
-  " timout option can't be set locally, so resetting is required
-  autocmd! FileType *\(startify\)\@<! set notimeout
+  " autocmd! FileType startify set timeout
+  " " timout option can't be set locally, so resetting is required
+  " autocmd! FileType *\(startify\)\@<! set notimeout
+  call SetFiletypeTimeout('startify', v:true, 100)
 augroup END
 " startify session save
 nnoremap <C-w><C-s> :SSave<CR>
@@ -200,7 +201,7 @@ nnoremap <C-b>D :BD<CR>
 "   " " tab drop .cc
 " endfunction
 " \ 'ctrl-q': function('s:build_quickfix_list') // unwieldy because ag doesn't supports function call for items
-let g:fzf_vim.preview_window = ['hidden,right,50%,wrap', 'ctrl-/']
+let g:fzf_vim.preview_window = ['hidden,right,70%,wrap', 'ctrl-/']
 let g:fzf_action = {
   \ 'ctrl-d': 'bdelete',
   \ 'return': 'drop',
@@ -228,9 +229,9 @@ endfunction
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
   \   "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>), 1,
-  \   fzf#vim#with_preview('right:hidden', 'ctrl-/'), <bang>0)
-nnoremap <leader>fa :Rg '<CR>
-nnoremap <leader>fA :Rg! '<CR>
+  \   fzf#vim#with_preview('right:hidden:70%', 'ctrl-/'), <bang>0)
+nnoremap <leader>fa :Rg<CR>
+nnoremap <leader>fA :Rg!<CR>
 nnoremap <leader>ft :Tags<CR>
 nnoremap <leader>fT :Tags!<CR>
 " alternative *man* *manpage* *:Man* with fzf search, author: "https://www.reddit.com/r/vim/comments/mg8ov7/fuzzily_searching_man_pages_using_fzfvim/"
@@ -392,7 +393,9 @@ let g:NERDTreeMinimalUI=1
 let g:NERDTreeDirArrows=1
 augroup NerdTree
   " default g:NERDTreeMapQuit seems to dangle if notimeout is set
+  " autocmd FileType nerdtree nnoremap <nowait> <buffer> q :q<CR>
   autocmd FileType nerdtree nnoremap <nowait> <buffer> q :q<CR>
+  call SetFiletypeTimeout('nerdtree', v:true, 100)
 augroup End
 
 " =======================================================================================================
@@ -415,7 +418,7 @@ let g:coc_global_extensions = [
 \ 'coc-snippets'
 \ ]
 let g:coc_start_at_startup = 1
-set timeout timeoutlen=600 ttimeoutlen=100
+" set timeout timeoutlen=600 ttimeoutlen=100
 " preventing error signs shifting sidebar (can still be disabled by f2)
 set signcolumn=yes
 autocmd CursorHold * silent call CocActionAsync('highlight')
