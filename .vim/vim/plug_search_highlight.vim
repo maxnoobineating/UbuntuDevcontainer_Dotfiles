@@ -154,8 +154,10 @@ nmap ci, ,h)<C-o><C-n>c<C-o>:noh<CR>
 
 
 " select around symbols
-vnoremap i, t,ot,o
+vnoremap i, t,oT,o
 vnoremap a, f,oF,o
+vnoremap i; t;oT;o
+vnoremap a; f;oF;o
 vnoremap i. t.oT.o
 vnoremap a. f.oF.o
 vnoremap i_ t_oT_o

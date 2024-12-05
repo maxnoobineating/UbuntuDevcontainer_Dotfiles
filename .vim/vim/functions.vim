@@ -1,6 +1,10 @@
 "=============================================================================="
 " Functions
-
+" open tab with command, if already exists in tabs, switch to it
+function! TabDropCMD(cmd)
+  execute "tab" . a:cmd
+  
+endfunction
 
 " vim performance profiling:
 " the second time toggle will save and close the file

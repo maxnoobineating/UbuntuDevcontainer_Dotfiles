@@ -1,3 +1,8 @@
+# vim manpage supports
+# export MANPAGER="vim -M +MANPAGER -"
+export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
+# MANROFFOPT="-c" XXX not sure if
+export MANROFFOPT="-c"
 
 # built-in completion enable
 autoload -Uz compinit

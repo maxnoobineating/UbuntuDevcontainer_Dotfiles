@@ -1,18 +1,70 @@
 " #===================================================================================#
+" disable insert mode ^ combo key
+inoremap <nowait> ^ ^
+
+" enable man.vim
+runtime! ftplugin/man.vim
+let g:ft_man_open_mode = 'tab'
+" Man page search *man* *manpage* *:Man*
+" man achieves c-] keyword jumping without tagfile by using keywordprg=<command> option
+function! OpenManpage()
+  let l:text = input("Man:", "", "custom,")
+  if(l:text == "")
+    return
+  endif
+  execute "tab Man " . l:text
+endfunction
+nnoremap <leader>! :call OpenManpage()<CR>
+
+
+" native tag jump c-] / going back c-^
+" going back 1 in tagStack
+nnoremap <C-\> <C-T>
+
+
 " Mappings
+" open help file prompt
+function! OpenHelpFile()
+  let l:text = input("Help:", "", "help")
+  if(l:text == "")
+    return
+  endif
+  " execute "tab 'drop +help\ " . l:text . "'"
+  execute "tab help " . l:text
+  let l:current_tabnr = tabpagenr()
+  let l:current_bufnr = bufnr()
+  " tabdo if len(tabpagebuflist()) == 1 && l:current_bufnr == bufnr() && l:current_tabnr != tabnr()
+  "       \ 
+endfunction
+nnoremap <leader>? :call OpenHelpFile()<CR>
+augroup HelpPage
+  autocmd! FileType help nnoremap <buffer> <tab> :tnext<CR>
+augroup END
 
-" session management
-nnoremap <C-w><C-s> :mksession!<CR>
-" augroup SessionManagement
-"   autocmd!
-"   autocmd SessionLoadPost * source ~/.vimrc
-" augroup END
 
+" function signiture related
+function! GenHeader_function(file)
+    let l:line_before = line("$")
+    execute "read !ctags --fields=+S -x --c-kinds=f " . shellescape(a:file) . " | awk '{sub(/\{/, \"\", $0); print substr($0, index($0,$5))}'"
+    let l:line_after = line("$")
+    call StripWhitespace()
+    execute (line(".") - (l:line_after - l:line_before) + 1) . "," . line(".") . "s/$/;/"
+endfunction
+" nnoremap <Leader>gh :new %:t:r.h \| read !ctags -x --c-kinds=f % | awk '{print $1"();"}'<CR>
+" command! -nargs=1 GenHeader read !ctags -x --c-kinds=f <args> | awk '{print $1"();"}'
+" command! -nargs=1 GenHeader read !ctags --fields=+S -x --c-kinds=f <args> | awk '{print $1" "$4";"}'
+" command! -nargs=1 GenHeader read !ctags --fields=+S -x --c-kinds=f <args> | awk '{sub(/\{/, "", $0); print substr($0, index($0,$5))}'<CR> \| call StripWhitespace()<CR>
+" command! -nargs=1 GenHeader execute "read !ctags --fields=+S -x --c-kinds=f " . shellescape(<args>) . " | awk \"{sub(/\\{/, "", $0); print substr($0, index($0,$5))}\"" \|
+"     \ let l:start_line = line("'[") \|
+"     \ call StripWhiteSpace() \|
+"     \ execute l:start_line . ",$s/$/;/"
+command! -nargs=1 -complete=file GenHeader call GenHeader_function(<f-args>)
 
 " space based mapping
 nnoremap <space><space> i<space><Esc>la<space><Esc>h
 vnoremap <space><space> <esc>`<i<space><Esc>`>la<space><Esc>`<lv`>l
 nnoremap <space>d f<space>xF<space>x
+vnoremap <space>d <esc>`>f<space>x`<F<space>x`<hv`>h
 
 " mapping yh
 function! ConfirmAndAppend(match)
@@ -27,10 +79,10 @@ nnoremap yh :let @0=''<CR>:%s//\=ConfirmAndAppend(submatch(0))/c<CR>doautocmd WS
 
 " search pattern pre-fill
 " reserve s register for matched text
-nnoremap ;; :%s:::c<C-b><right><right><right>
-nnoremap ;' :%s:::n<C-b><right><right><right>
-vnoremap ;; <Esc>:'<,'>s:\%V::c<C-b><right><right><right><right><right><right><right><right><right><right>
-vnoremap ;' <Esc>:'<,'>s:\%V::n<C-b><right><right><right><right><right><right><right><right><right><right>
+" nnoremap ;; :%s:::c<C-b><right><right><right>
+" nnoremap ;' :%s:::n<C-b><right><right><right>
+" vnoremap ;; <Esc>:'<,'>s:\%V::c<C-b><right><right><right><right><right><right><right><right><right><right>
+" vnoremap ;' <Esc>:'<,'>s:\%V::n<C-b><right><right><right><right><right><right><right><right><right><right>
 
 " search in recently selected lines
 nnoremap <leader>/ /\%V
@@ -56,9 +108,64 @@ nnoremap <C-w><C-k> :wincmd k<CR>:call ResizeHorizontal(75)<CR>
 nnoremap <C-w><C-l> :wincmd l<CR>:call ResizeVertical(75)<CR>
 
 
+" ========================================================================="
+" Buffer Related Actions
+" Store cursor and scroll position when leaving a buffer
+augroup BufferActions
+  autocmd!
+  autocmd BufLeave * let b:most_recent_buffer_topline = line('w0')
+  " autocmd BufEnter * let b:most_recent_buffer_topline = 0
+  autocmd BufEnter * if !exists('b:most_recent_buffer_topline') | let b:most_recent_buffer_topline = 0 | endif
+augroup END
+
+function! BufferActions_restoreScrollPosition()
+  execute "normal! zt"
+  let l:offset = b:most_recent_buffer_topline - line('w0')
+  if(l:offset == 0)
+    return
+  endif
+  if(l:offset < 0)
+    execute "normal! " . -l:offset . "\<C-Y>"
+  else
+    execute "normal! " . l:offset . "\<C-E>"
+  endif
+endfunction
+
+" next/prev buffer
+noremap <c-b>n :bn \| call BufferActions_restoreScrollPosition()<CR>
+noremap <c-b>N :bp \| call BufferActions_restoreScrollPosition()<CR>
+noremap <C-b>p :b# \| call BufferActions_restoreScrollPosition()<CR>
+" return true; open cuurent buffer into new tab
+nnoremap <C-b>t :tab split \| call BufferActions_restoreScrollPosition()<CR>
+nnoremap <C-b>a :tab sball<CR>
+" unload current buffer
+nnoremap <C-b>d :bd<CR>
+
+" tabline action
 " move tab
-nnoremap <C-w>< :tabmove -1<CR>
-nnoremap <C-w>> :tabmove +1<CR>
+" nnoremap <C-w>< :tabmove -1<CR>
+" nnoremap <C-w>> :tabmove +1<CR>
+nnoremap <C-w>< :<C-u>execute 'tabmove -' . (v:count1)<CR>
+nnoremap <C-w>> :<C-u>execute 'tabmove +' . (v:count1)<CR>
+" switch to last active tab
+nnoremap <C-Home> g<tab>
+" close current tab
+nnoremap <silent> <C-End> :tabclose!<CR>
+" function! JumpToLastTabPage()
+"   if g:lasttab > 1
+"     return g:lasttab
+"   endif
+" endfunction
+" let g:lasttab = 0
+augroup TabAction
+  autocmd TabLeave * let g:lasttab = tabpagenr('#')
+  autocmd TabClosed * if g:lasttab > 1 | execute "normal! " . g:lasttab . "gt" | endif
+  autocmd TabClosed * let g:lastClosedTabnr = tabpagenr()
+augroup END
+noremap <C-t> <nop>
+nnoremap <C-t><C-z> :drop +tab\ e #
+
+" ========================================================================="
 
 " Keybinding Mappings
 inoremap <C-k> <C-o>d$
@@ -316,11 +423,16 @@ xnoremap <nowait> K k
 " H/L for navigating sentences '(' ')'
 nnoremap H (
 nnoremap L )
+" devil's jjjj combo
+nnoremap <C-j> 7j
+nnoremap <C-k> 7k
 
 "keep visual mode after indent
 vnoremap > >gv^
 vnoremap < <gv^
-
+" indent with one > <
+nnoremap <nowait> > >>
+nnoremap <nowait> < <<
 
 " toggle number sidebar (for more easily tmux select)
 let g:signcolumn_toggle_state = 'no'
@@ -416,24 +528,25 @@ endfunction
     " (because tmux select is recognized by the terminal unlike vim select)
     " echo "X11 is not installed. adopted empty clipboard (with tmux buffer sharing)"
     " yanking to system clipboard
-    vnoremap Y "0y
-    noremap YY "0yy
+    vnoremap y "0y
+    nnoremap yy "0yy
 
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
     " visual mode paste should select the pasted content
     " first, fix cursor position after paste (default is - to the end if pasting no linebreak, to the begining of the next line if pasting linebreaks)
 
-    noremap <nowait> p gp
-    noremap <nowait> P "0gp
-    noremap gp p
-    noremap gP "0p
-    vnoremap gP "0P
+    noremap <nowait> p "0p
+    noremap <nowait> P "0P
+    noremap gp "0gp
+    noremap gP "0gP
+    vnoremap gP "0gP
     " pls reserve mp for this
-    vnoremap <nowait> p mpgPv`po
-    vnoremap <nowait> P mp"0gPv`po
+    vnoremap <nowait> p mp"0pv`po
+    vnoremap <nowait> P mp"0Pv`po
 
-    vnoremap D "0x
-    nnoremap DD "0dd
+    vnoremap d "0x
+    nnoremap dd "0dd
+
 " endif
 " 6/28/2024, dunno why but the SystemCall check suddenly passed without X11, disabling it
 
@@ -514,14 +627,6 @@ inoremap <C-]> <C-D>
 " insert mode paste from register ("" register from y)
 " inoremap <C-p> <C-r>"
 
-" next/prev buffer
-noremap <leader>bn :bp<CR>
-noremap <leader>bp :bn<CR>
-" open cuurent buffer into new tab
-nnoremap <leader>bt :tab split<CR>
-nnoremap <leader>ba :tab sball<CR>
-" unload current buffer
-nnoremap <leader>bd :bd<CR>
 
 noremap <C-Up> <C-Y>
 noremap <C-Down> <C-E>
@@ -542,14 +647,15 @@ function! OpenTempBuffer(command, sortCMD='')
         execute a:sortCMD
         setlocal nowrap
         setlocal nomodifiable
-        nnoremap <buffer> q :bd<CR>
+        nnoremap <nowait> <buffer> q :bd<CR>
+        call ResizeVertical(30)
     finally                              " Execute even if exception is raised
         call setreg("a", old_reg, old_reg_type) " restore register a
     "trying to replace :q in the mapping pane with :bd | q for clearing buffer
     endtry
 endfunction
 " open mapping buffer
-nnoremap <leader>m :call OpenTempBuffer('map', '%!sort -k1.4,1.4')<CR>
+nnoremap <leader>mm :call OpenTempBuffer('map', '%!sort -k1.4,1.4')<CR>
 " open highlight buffer
 
 " Strip trailing whitespace (,sw)

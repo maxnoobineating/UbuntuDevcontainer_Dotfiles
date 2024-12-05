@@ -3,5 +3,7 @@
     "diagnostic.checkCurrentLine": true,
     "python.jediEnabled": false,
     "suggest.floatConfig": {},
-    "colors.enable": true
+    "colors.enable": true,
+    "coc.preferences.jumpCommand": "tab drop",
+    "coc.preferences.useQuickfixForLocations": true
 }

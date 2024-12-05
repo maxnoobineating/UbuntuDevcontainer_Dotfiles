@@ -1,3 +1,6 @@
+" tabline settings
+set showtabline=2 " always show tabline even for 1 tab
+
 " folding method
 set foldmethod=syntax
 
@@ -5,7 +8,7 @@ set foldmethod=syntax
 set updatetime=500
 
 " jump to existing buffer first
-set switchbuf=usetab
+set switchbuf=usetab,useopen,newtab
 
 " filetype identification
 autocmd BufNewFile,BufRead *.ipy set filetype=python
@@ -13,10 +16,6 @@ autocmd BufNewFile,BufRead *.ipy set filetype=python
 " popup menu settings
 set pumheight=4
 
-" setting combo key waiting time
-" (vim don't have combination key, it only wait a while for the potential squence
-" which led to a lot of keymapping causing laggy input)
-" set timeoutlen=300
 
 " Open every file as unix format (mainly for opening windows file)
 set fileformats=unix,dos
@@ -31,6 +30,7 @@ set fileformats=unix,dos
 " loaded some other way (e.g. saved as `foo`, and then Vim started with
 " `vim -u foo`).
 set nocompatible
+
 
 " Turn on syntax highlighting.
 syntax enable
@@ -206,6 +206,7 @@ augroup filetype_indent
   " C specific settings
   autocmd BufEnter *.c setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter *.cpp setlocal expandtab tabstop=2 shiftwidth=2
+  autocmd BufEnter *.h setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter * execute 'IndentLinesReset'
 augroup END
 
