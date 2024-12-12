@@ -10,6 +10,8 @@ set timeoutlen=100
 " XXX testing with notimeout, no reason to have dangling precursor key other than when it's a mistype, but mistype is often cancel by <Esc> (alt+any key), so the timeout is pretty irrelevant, and it causes problem with <leader><key> send out <key> if it's dangling, which isn't preferable in any way.
 " XXX set compatible will mess up this setting, so put this in the end
 set notimeout
+set ttimeout
+set ttimeoutlen=20
 call SetGlobalTimeoutSnapShot(v:false, 100)
 
 

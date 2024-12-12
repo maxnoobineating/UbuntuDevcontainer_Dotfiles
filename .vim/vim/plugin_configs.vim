@@ -51,7 +51,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'tpope/vim-surround'
 
     " syncing vim unamed register with Tmux buffer
-    Plug 'roxma/vim-tmux-clipboard'
+    " Plug 'roxma/vim-tmux-clipboard'
 
     " status bar
     Plug 'vim-airline/vim-airline'
@@ -120,6 +120,7 @@ augroup StartifyAug
   " autocmd! FileType *\(startify\)\@<! set notimeout
   call SetFiletypeTimeout('startify', v:true, 100)
 augroup END
+
 " startify session save
 nnoremap <C-w><C-s> :SSave<CR>
 let g:startify_session_persistence = 1
@@ -133,17 +134,20 @@ let g:startify_session_persistence = 1
 "     endfor
 " endfunction
 " dunno why above don't work
+let g:specialBufferType_list = ["help", "man"]
 function! CloseSpecialBuffers()
     for buf in range(1, bufnr('$'))
         let l:buftype = getbufvar(buf, '&filetype')
-        if l:buftype ==# "help" || l:buftype ==# "man"
+        " if l:buftype ==# "help" || l:buftype ==# "man"
+        if index(g:specialBufferType_list, l:buftype) >= 0
             execute 'bwipeout' buf
             " echo buf
         endif
     endfor
 endfunction
+command! CloseSB call CloseSpecialBuffers()
 " let g:startify_session_before_save = [ 'silent! call CloseBuffersType("help")', 'silent! call CloseBuffersType("man")']
-let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()']
+let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()', 'autocmd! TabAction']
 
 let g:startify_lists = [
       \ { 'type': 'sessions',  'header': ['   Sessions']       },
@@ -186,57 +190,112 @@ function! s:delete_buffers(lines)
   execute 'bdelete!' join(map(a:lines, {_, line -> split(line)[0]}))
 endfunction
 
+  " \ 'ctrl-d' : { lines -> s:delete_buffers(lines) }
+  " \ 'sink*': {
+  " \ 'ctrl-d' : function('s:delete_buffers'),
+  " \ 'ctrl-m' : function('s:FzfPrintLines')
+  " \ },
 command! BD call fzf#run(fzf#wrap({
   \ 'source': s:list_buffers(),
-  \ 'sink*': { lines -> s:delete_buffers(lines) },
+  \ 'sink*' : function('s:delete_buffers'),
   \ 'options': '--multi --reverse --bind ctrl-a:select-all+accept'
 \ }))
+
 nnoremap <C-b>D :BD<CR>
 " ##########
 
 " An action can be a reference to a function that processes selected lines
-" function! s:build_quickfix_list(lines)
-"   silent call setqflist(map(copy(a:lines), '{ "filename": v:val, "lnum": 1 }'))
-"   " silent copen
-"   " " tab drop .cc
-" endfunction
+function! s:build_quickfix_list(lines)
+  let qflist = []
+  for line in a:lines
+    let [filename, linenr, colnr] = split(l:line, ':')[:2]
+    let l:qflist += [{"filename": l:filename , "lnum": l:linenr}]
+  endfor
+  echom string(l:qflist)
+  silent call setqflist(l:qflist)
+  " silent TabDrop copen
+endfunction
 " \ 'ctrl-q': function('s:build_quickfix_list') // unwieldy because ag doesn't supports function call for items
+" just use default quickfix
+let g:fzf_vim.listproc = { list -> fzf#vim#listproc#quickfix(list) }
+
+function! s:FZFTestEchom(lines)
+  echom "##:" . string(a:lines)
+  " supposedly keep fzf from closing?
+  return 0
+endfunction
+
+function! s:FzfAction_tabDropWrapper(lines)
+  if len(a:lines) == 1
+    let [filename, linenr, colnr] = split(a:lines[0], ':')[:2]
+    silent execute "TabDrop tabnew " . filename
+    call cursor(l:linenr, l:colnr)
+  elseif len(a:lines) > 1
+    for line in a:lines
+      let [filename, linenr, colnr] = split(l:line, ':')[:2]
+      silent execute "TabDrop tabnew " . filename
+      call cursor(l:linenr, l:colnr)
+    endfor
+  endif
+endfunction
+
+function! s:FzfPrintLines(lines)
+  " echom join(map(a:lines, function('string')), '\n')
+  " echom join(a:lines, '\n')
+  echom "### Fzf selected lines arguments: ###"
+  for line in a:lines
+    echom l:line
+  endfor
+  return 0
+endfunction
+
 let g:fzf_vim.preview_window = ['hidden,right,70%,wrap', 'ctrl-/']
+  " \ 'ctrl-q': function('fzf#vim#listproc#quickfix'),
 let g:fzf_action = {
-  \ 'ctrl-d': 'bdelete',
-  \ 'return': 'drop',
-  \ 'enter': 'drop +tab',
-  \ 'ctrl-t': 'drop +tab',
+  \ 'ctrl-q': function('s:build_quickfix_list'),
+  \ 'ctrl-d': function('s:delete_buffers'),
+  \ 'enter': function('s:FzfAction_tabDropWrapper'),
+  \ 'ctrl-t': 'tabnew',
+  \ 'ctrl-m': function('s:FzfPrintLines'),
   \ 'ctrl-x': 'split',
   \ 'ctrl-v': 'vsplit' }
 let g:fzf_history_dir = '~/.local/share/fzf-history'
 " quickfix list (technically doesn't belong here) stepping
 " in fzf popup, <alt-a> to select all, enter to add all to the quickfix list, then using this to step over them
+
+
 " nnoremap <C-j> :cn<CR>
 " nnoremap <C-k> :cp<CR>
-nnoremap <leader>qn :drop tab cn<CR>
-nnoremap <leader>qp :drop tab cp<CR>
+nnoremap <leader>cn :silent! TabDrop cn<CR>
+nnoremap <leader>cp :silent! TabDrop cp<CR>
 
 " fzf popup mappings
 nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fF :Files!<CR>
 nnoremap <leader>fb :Buffers<CR>
 nnoremap <leader>fB :Buffers!<CR>
-function AgPatternFinder()
-    let l:pattern = input('Enter pattern: ')
-    execute 'Ag ' . l:pattern
-endfunction
+let s:fzf_findAnything_historyFileName = 'fzf_fa'
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
   \   "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>), 1,
-  \   fzf#vim#with_preview('right:hidden:70%', 'ctrl-/'), <bang>0)
+  \   fzf#wrap(s:fzf_findAnything_historyFileName, fzf#vim#with_preview('right:hidden:70%', 'ctrl-/'), <bang>0), <bang>0)
 nnoremap <leader>fa :Rg<CR>
 nnoremap <leader>fA :Rg!<CR>
 nnoremap <leader>ft :Tags<CR>
 nnoremap <leader>fT :Tags!<CR>
+nnoremap <leader>fl :BLines<CR>
+nnoremap <leader>fL :Lines<CR>
 " alternative *man* *manpage* *:Man* with fzf search, author: "https://www.reddit.com/r/vim/comments/mg8ov7/fuzzily_searching_man_pages_using_fzfvim/"
 " command! -nargs=? Apropos call fzf#run(fzf#wrap({'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1', 'sink': 'tab Man', 'options': ['--preview', "MANPAGER=\"sh -c 'col -bx | batcat -l man -p'\" MANWIDTH=".(&columns/2-4).' man {}']}))
-command! -nargs=? Apropos call fzf#run(fzf#wrap({'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1', 'sink': 'tab Man', 'options': ['--preview', " man {} | sh -c 'col -bx | batcat --color=always  -l man -p'", '--preview-window=nohidden,wrap']}))
+let s:fzf_findManpage_historyFileName = "fzf_fm"
+command! -nargs=? Apropos call fzf#run(
+  \ fzf#wrap(
+    \ s:fzf_findManpage_historyFileName,
+    \ {'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1',
+      \ 'sink': 'tab Man',
+      \ 'options': ['--preview',
+        \ " man {} | sh -c 'col -bx | batcat --color=always  -l man -p'",
+        \ '--preview-window=nohidden,wrap,70%']}))
 " command! -nargs=? Apropos call fzf#run(fzf#wrap({'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1', 'sink': 'tab Man', 'options': ['--preview', "man {}"]}))
 nnoremap <leader>fm :Apropos<CR>
 
@@ -371,6 +430,25 @@ let g:airline_theme='alduin'
 " airline + tagbar integration
 let g:airline#extensions#tagbar#enabled = 1
 let g:airline#extensions#tagbar#flags = 'f'
+" mode display
+  let g:airline_mode_map = {
+      \ '__'     : '-',
+      \ 'c'      : 'C',
+      \ 'i'      : 'I',
+      \ 'ic'     : 'I',
+      \ 'ix'     : 'I',
+      \ 'n'      : 'N',
+      \ 'multi'  : 'M',
+      \ 'ni'     : 'N',
+      \ 'no'     : 'N',
+      \ 'R'      : 'R',
+      \ 'Rv'     : 'R',
+      \ 's'      : 'S',
+      \ 'S'      : 'S',
+      \ 't'      : 'T',
+      \ 'v'      : 'V',
+      \ 'V'      : 'V',
+      \ }
 
 " =======================================================================================================
 " tagbar
@@ -391,6 +469,7 @@ nnoremap <leader>ng :NERDTreeToggleVCS<CR>
 let g:NERDTreeShowHidden=1
 let g:NERDTreeMinimalUI=1
 let g:NERDTreeDirArrows=1
+let g:NERDTreeMapCWD='b'
 augroup NerdTree
   " default g:NERDTreeMapQuit seems to dangle if notimeout is set
   " autocmd FileType nerdtree nnoremap <nowait> <buffer> q :q<CR>
@@ -451,8 +530,8 @@ nmap <silent> gi :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-impleme
 nmap <silent> gr :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-references)
 " even if this isn't coc option, the command are similar
 " expand expand '<cfile>' because <cfile> expand into file path, than file path string is expanded with wild card escaped
-nmap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| tab drop <cfile> \| endif<CR>
-nmap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| tab drop <cfile> \| tabprevious \| endif<CR>
+nnoremap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| endif<CR>
+nnoremap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| tabprevious \| endif<CR>
 function! CocJump_DropLastJumpFile()
     if exists('g:cocJump_previousFile') && !empty(g:cocJump_previousFile)
         execute 'drop' g:cocJump_previousFile
@@ -529,7 +608,7 @@ function! ScrollAndPrev()
   call coc#pum#prev(1)
   call coc#pum#scroll(0)
 endfunction
-inoremap <silent><expr> <S-TAB> 
+inoremap <silent><expr> <S-TAB>
     \ coc#pum#visible() ?
         \ coc#pum#prev(1) :
         \ "\<C-h>"

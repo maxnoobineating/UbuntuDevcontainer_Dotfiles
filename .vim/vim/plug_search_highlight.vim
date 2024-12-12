@@ -8,9 +8,10 @@ vmap <Plug>(VerityHighlight_Plug_HighlightSelect) *
 
 
 function! VerityHighlight_restrictPattern(startpos, endpos, pattern)
-  let [l:startLine, l:startCol] = a:startpos
-  let [l:endLine, l:endCol] = a:endpos
-  return '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
+  " let [l:startLine, l:startCol] = a:startpos
+  " let [l:endLine, l:endCol] = a:endpos
+  " return '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+2) . 'c\&\%' . (l:endLine) . 'l\)\)'
+  return RangedPattern(a:startpos, a:endpos, a:pattern)
 endfunction
 
 function! VerityHighlight_SolidifiedPattern(pattern)

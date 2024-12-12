@@ -191,10 +191,10 @@ syntax on
 " Highlight current line
 set cursorline
 
-" change tabs to 4 spaces
+" change tabs to 2 spaces
 set expandtab
-set tabstop=4
-set shiftwidth=4
+set tabstop=2
+set shiftwidth=2
 " File type specific settings
 augroup filetype_indent
   autocmd!

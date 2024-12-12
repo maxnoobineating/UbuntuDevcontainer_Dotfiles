@@ -90,6 +90,15 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting z zsh-vi-mode)
 
+####
+# zsh-vi-mode config
+# ZVM_CONFIG_FUNC = zvm_config by default
+# function zvm_config() {
+#   # ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
+#   bindkey -M normal '-' '$'
+# }
+
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration

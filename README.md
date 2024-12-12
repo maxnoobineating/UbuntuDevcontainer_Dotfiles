@@ -9,7 +9,7 @@ if automatic plugin installation isn't working in setup, try:
 
 https://stackoverflow.com/questions/75276760/git-fetch-remote-name-does-nothing-but-git-fetch-remote-url-fetches-the-cha
 Problem with local repo not having proper remote tracking branch:
-- Add `fetch = refs/heads/*:refs/remotes/origin/*` to ~/.cfg/config [branch "origin"]
+- Add `fetch = refs/heads/*:refs/remotes/origin/*` to ~/.cfg/config [remote "origin"]
 - `dotfile pull` resolving conflict if there's version mismatch
 
 ## Introduction
