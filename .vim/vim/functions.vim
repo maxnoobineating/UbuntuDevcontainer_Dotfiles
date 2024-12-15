@@ -1,6 +1,42 @@
 "=============================================================================="
 " Functions
 
+" function! CloseBuffersType(type)
+"     for buf in range(1, bufnr('$'))
+"         if getbufvar(buf, '&filetype') ==# a:type
+"             execute 'bwipeout' buf
+"             " echo buf
+"         endif
+"     endfor
+" endfunction
+" dunno why above don't work
+let g:specialBufferType_list = ["help", "man"]
+function! CloseSpecialBuffers()
+    for buf in range(1, bufnr('$'))
+        let l:buftype = getbufvar(buf, '&filetype')
+        " if l:buftype ==# "help" || l:buftype ==# "man"
+        if index(g:specialBufferType_list, l:buftype) >= 0
+            execute 'bwipeout' buf
+            " echo buf
+        endif
+    endfor
+endfunction
+command! CloseSB call CloseSpecialBuffers()
+
+" list unique add (primarily for avoiding option += append duplicates wlet g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()']hen .vim file sourced twice)
+function! ListAddUnique(list, value)
+  let l:mutable_list = a:list
+  if l:mutable_list->index(a:value) < 0
+    let l:mutable_list += [a:value]
+  endif
+endfunction
+
+" function! DictAddUnique(dict, key, value)
+"   if !has_key(a:dict, a:key)
+"     let a:dict[a:key] = a:value
+"   endif
+" endfunction
+
 " arithmetic
 " let g:arithmetic_bit_mostSignificant = pow(2, v:numbersize)
 function! Sign(x)
@@ -14,6 +50,7 @@ function! Sign(x)
   endif
 endfunction
 
+
 " VerityHighlight brought here
 function! RangedPattern(startpos, endpos, pattern)
   let [l:startLine, l:startCol] = a:startpos
@@ -21,6 +58,18 @@ function! RangedPattern(startpos, endpos, pattern)
   let return_pattern = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+1) . 'c\&\%' . (l:endLine) . 'l\)\)'
   " echom l:return_pattern
   return l:return_pattern
+endfunction
+
+function! RangedPattern_startFromCursor_WrapAround(pattern)
+  let [l:cusline, l:cuscol] = [line('.'), col('.')]
+  let l:firstHalf_start = [l:cusline, l:cuscol]
+  let l:firstHalf_end = [line('$'), col([line('$'), '$'])]
+  let l:pattern_firstHalf = RangedPattern(l:firstHalf_start, l:firstHalf_end, a:pattern)
+  " echo 'wrapped around EOF'
+  let l:secondHalf_start = [1, 1]
+  let l:secondHalf_end = l:cuscol <= 1 ? [l:cusline - 1, col([line('$') - 1, '$'])] : [l:cusline, l:cuscol - 1]
+  let l:pattern_secondHalf = RangedPattern(l:secondHalf_start, l:secondHalf_end, a:pattern)
+  return [l:pattern_firstHalf, l:pattern_secondHalf]
 endfunction
 
 " backspace cancelable input()
@@ -32,11 +81,14 @@ function! BackspaceCancelable_input(...)
   cnoremap <buffer><expr> <CR> getcmdtype()=='@' ? "<cmd>let v:statusmsg=v:true<CR><CR>" : "<CR>"
   let input_arguments = ""
   if a:0 >= 1
-    let l:input_arguments .= shellescape(a:1)
+    " let l:input_arguments .= shellescape(a:1)
+    let l:input_arguments = '"' . substitute(a:1, '"', '\\"', 'g') . '"'
   endif
   for argn in a:000[1:]
-    let l:input_arguments .= ", " . shellescape(l:argn)
+    " let l:input_arguments .= ", " . shellescape(l:argn)
+    let l:input_arguments .= ', ' . '"' . substitute(l:argn, '"', '\\"', 'g') . '"'
   endfor
+  " echom l:input_arguments
   try
     " input() don't modify this value in any ways (at least that I know of), so change this as default right before input() call can better avoid contamination
     let v:statusmsg = v:false 
@@ -109,26 +161,6 @@ function! SetFiletypeTimeout(type, settimeout = v:true, settimeoutlen = &timeout
   "     \ "\ | call SetGlobalTimeout(" . a:settimeout . ", " . a:settimeoutlen . ") | echom 'Leave set, file:' .  shellescape(<afile>)" .
   "     \ "\ | endif"
 endfunction
-
-augroup DebugAutocmd
-  autocmd!
-  autocmd WinLeave * execute "echom 'WinLeave' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd WinEnter * execute "echom 'WinEnter' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd TabLeave * execute "echom 'TabLeave' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd TabEnter * execute "echom 'TabEnter' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufWinLeave * execute "echom 'BufWinLeave' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufWinEnter * execute "echom 'BufWinEnter' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufLeave * execute "echom 'BufLeave' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd Bufread * execute "echom 'Bufread' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufEnter * execute "echom 'BufEnter' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufCreate * execute "echom 'BufCreate' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd BufDelete * execute "echom 'BufDelete' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  autocmd FileType * execute "echom 'FileType' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-  
-  autocmd VimLeavePre * execute "echom 'FileType' . ' - fileName: ' . expand('<afile>') . ', &filetype=' . &filetype"
-augroup END
-autocmd! DebugAutocmd
-
 
 
 " vim performance profiling:

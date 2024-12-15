@@ -1,6 +1,7 @@
 " =============================================================================================
 " Plugins Installation
 
+
 call plug#begin('~/.vim/plugged')
     let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
     " Install vim-plug if not found
@@ -125,29 +126,13 @@ augroup END
 nnoremap <C-w><C-s> :SSave<CR>
 let g:startify_session_persistence = 1
 
-" function! CloseBuffersType(type)
-"     for buf in range(1, bufnr('$'))
-"         if getbufvar(buf, '&filetype') ==# a:type
-"             execute 'bwipeout' buf
-"             " echo buf
-"         endif
-"     endfor
-" endfunction
-" dunno why above don't work
-let g:specialBufferType_list = ["help", "man"]
-function! CloseSpecialBuffers()
-    for buf in range(1, bufnr('$'))
-        let l:buftype = getbufvar(buf, '&filetype')
-        " if l:buftype ==# "help" || l:buftype ==# "man"
-        if index(g:specialBufferType_list, l:buftype) >= 0
-            execute 'bwipeout' buf
-            " echo buf
-        endif
-    endfor
-endfunction
-command! CloseSB call CloseSpecialBuffers()
 " let g:startify_session_before_save = [ 'silent! call CloseBuffersType("help")', 'silent! call CloseBuffersType("man")']
-let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()', 'autocmd! TabAction']
+let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()']
+let g:startify_session_savevars = [
+      \ 'g:startify_session_savevars',
+      \ 'g:startify_session_savecmds'
+      \ ]
+let g:startify_session_savecmds = []
 
 let g:startify_lists = [
       \ { 'type': 'sessions',  'header': ['   Sessions']       },
