@@ -1,27 +1,92 @@
 "=============================================================================="
 " Functions
 
-" function! CloseBuffersType(type)
-"     for buf in range(1, bufnr('$'))
-"         if getbufvar(buf, '&filetype') ==# a:type
-"             execute 'bwipeout' buf
-"             " echo buf
-"         endif
-"     endfor
-" endfunction
-" dunno why above don't work
-let g:specialBufferType_list = ["help", "man"]
+" warning echom
+command! -nargs=* EchomWarn echohl WarningMsg | echo <q-args> | echohl None
+
+" return funcref for executing command, return v:true if executed without error
+function! CMDFunc(cmd)
+  try
+    execute a:cmd
+  catch
+    echoerr v:exception
+    return v:false
+  endtry
+  return v:true
+endfunction
+function! CMDFuncref(cmd)
+  return Curry(function('CMDFunc'), a:cmd)
+endfunction
+
+" time diff between objects returns by reltime()
+function! ReltimeDiff(reltime0, reltime1)
+  return (a:reltime0[0] - a:reltime1[0]) * 1000000 + (a:reltime0[1] - a:reltime1[1])
+endfunction
+
+" restoring tabdo
+function! Tabdo(cmd)
+  let old_tabpagenr = tabpagenr()
+  execute "tabdo " . a:cmd
+  execute l:old_tabpagenr . "tabnext"
+endfunction
+
+" is in / contains
+function! Contains(object, value)
+  if type(a:object) == v:t_string
+    return match(a:object, '\V' . a:value) >= 0
+  elseif type(a:object) == v:t_list
+    return index(a:object, a:value) >= 0
+  elseif type(a:object) == v:t_dict
+    return index(a:object->keys()) >= 0
+  else
+    throw expand("<stack>") . " - wrong arg type!"
+  return
+endfunction
+function! Isin(value, object)
+  return Contains(a:object, a:value)
+endfunction
+
+" currying
+function! Curry(fn, ...) abort
+  " Capture the initial arguments
+  let args = a:000
+  return {... -> call(a:fn, args + a:000)}
+endfunction
+
+" autocmd SourcePre * ++once command! presource -nargs=*
+command! -nargs=* Sourcepost execute "autocmd SourcePost * ++once ++nested " . <q-args>
+
+" special type of buffer/file
+let g:specialFileType_list = ["help", "man"]
+let g:specialBufferType_list = ["help", "nofile"]
+function! IsSpecialFileType(filetype)
+  return a:filetype->Isin(g:specialFileType_list)
+endfunction
+function! IsSpecialBuffer(buftype)
+  return a:buftype->Isin(g:specialBufferType_list)
+endfunction
 function! CloseSpecialBuffers()
     for buf in range(1, bufnr('$'))
-        let l:buftype = getbufvar(buf, '&filetype')
+        let l:buftype = getbufvar(buf, '&buftype')
         " if l:buftype ==# "help" || l:buftype ==# "man"
-        if index(g:specialBufferType_list, l:buftype) >= 0
-            execute 'bwipeout' buf
+        if l:buftype->Isin(g:specialBufferType_list)
+            execute 'bwipeout! ' . buf
+            " echo buf
+        endif
+    endfor
+endfunction
+function! CloseSpecialFiles()
+    for buf in range(1, bufnr('$'))
+        let l:filetype = getbufvar(buf, '&filetype')
+        " if l:buftype ==# "help" || l:buftype ==# "man"
+        if l:filetype->Isin(g:specialFileType_list)
+            execute 'bwipeout! ' . buf
             " echo buf
         endif
     endfor
 endfunction
 command! CloseSB call CloseSpecialBuffers()
+command! CloseSF call CloseSpecialFiles()
 
 " list unique add (primarily for avoiding option += append duplicates wlet g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()']hen .vim file sourced twice)
 function! ListAddUnique(list, value)
@@ -29,6 +94,12 @@ function! ListAddUnique(list, value)
   if l:mutable_list->index(a:value) < 0
     let l:mutable_list += [a:value]
   endif
+endfunction
+
+function! ListAppendUnique(list, appList)
+  for item in a:appList
+    eval a:list->ListAddUnique(l:item)
+  endfor
 endfunction
 
 " function! DictAddUnique(dict, key, value)
@@ -70,6 +141,10 @@ function! RangedPattern_startFromCursor_WrapAround(pattern)
   let l:secondHalf_end = l:cuscol <= 1 ? [l:cusline - 1, col([line('$') - 1, '$'])] : [l:cusline, l:cuscol - 1]
   let l:pattern_secondHalf = RangedPattern(l:secondHalf_start, l:secondHalf_end, a:pattern)
   return [l:pattern_firstHalf, l:pattern_secondHalf]
+endfunction
+
+function! ConfirmActOnMatchings(pattern)
+  
 endfunction
 
 " backspace cancelable input()

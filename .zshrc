@@ -1,3 +1,21 @@
+# C environment setup
+export VERITY_LIBRARY_PATH="$HOME/nand2tetris_volumn/myLib"
+# include path as if compiled with -I<dir> option
+export CPATH="$CPATH:$VERITY_LIBRARY_PATH/C/include/"
+# library path as if compiled with -L<dir> option (statically linked)
+export LIBRARY_PATH="$LIBRARY_PATH:$VERITY_LIBRARY_PATH/C/lib/"
+# library path for dynamically linked libary - because dynamic .so linking *happens in runtime*
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$VERITY_LIBRARY_PATH/C/lib/"
+
+# automatically move mylib.c and mylib.h to $VERITY_LIBRARY_PATH
+function export_Clib() {
+  echo $PWD
+  mv $1.c $VERITY_LIBRARY_PATH/C/lib/
+  mv $1.h $VERITY_LIBRARY_PATH/C/include/
+  ln -s $VERITY_LIBRARY_PATH/C/lib/$1.c $1.c
+  ln -s $VERITY_LIBRARY_PATH/C/include/$1.h $1.h
+}
+
 # vim manpage supports
 # export MANPAGER="vim -M +MANPAGER -"
 export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
@@ -88,7 +106,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting z zsh-vi-mode)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting z) # zsh-vi-mode)
 
 ####
 # zsh-vi-mode config
@@ -105,6 +123,7 @@ source $ZSH/oh-my-zsh.sh
 
 # color correction
 export TERM="xterm-256color"
+# export TERM="tmux-256color"
 
 # export MANPATH="/usr/local/man:$MANPATH"
 export PYTHONPATH="/root/.ipython/extensions"

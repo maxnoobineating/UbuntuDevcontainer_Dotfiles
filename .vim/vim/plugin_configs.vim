@@ -164,26 +164,61 @@ let g:fzf_vim.tags_command = 'ctags -R'
 " ##########
 "FZF Buffer Delete
 " author: https://www.reddit.com/r/neovim/comments/mlqyca/fzf_buffer_delete/
-function! s:list_buffers()
+function! FzfBD_listBuffers()
   redir => list
   silent ls
   redir END
   return split(list, "\n")
 endfunction
 
-function! s:delete_buffers(lines)
+function! FzfBD_deleteBuffers(lines)
+  echo "FzfBD_deleteBuffers: " . string(a:lines)
   execute 'bdelete!' join(map(a:lines, {_, line -> split(line)[0]}))
 endfunction
 
-  " \ 'ctrl-d' : { lines -> s:delete_buffers(lines) }
-  " \ 'sink*': {
-  " \ 'ctrl-d' : function('s:delete_buffers'),
-  " \ 'ctrl-m' : function('s:FzfPrintLines')
-  " \ },
+function! FzfBD_tabDrop_sink(line)
+  execute "TabDrop b " . FzfBD_getFzfBufnr(a:line)
+endfunction
+
+function! FzfBD_getFzfBufnr(fzf_output)
+  echom "FzfBD_getFzfBufnr(" . string(a:fzf_output) . ")"
+  let fzf_list = split(a:fzf_output, " ")
+  " echom string(split(a:fzf_output, " "))
+  return str2nr(fzf_list[0])
+endfunction
+
+let s:fzfBD_listeningServerName = 'fzfBD'
+let s:fzfBD_RCEServer_handle = RCEChannel_RCEServerStart(s:fzfBD_listeningServerName)
+let [s:fzfBD_RCEfzf2relay_pipe, s:fzfBD_RCErelay2fzf_pipe, s:fzfBD_RCEjobid] = s:fzfBD_RCEServer_handle
+let s:fzfBD_RCEshellscript_ctrl_t =
+      \ RCEChannel_executeInVim_shellscript('execute ' . shellescape('tabnew +b\\\\ ') . '. FzfBD_getFzfBufnr("{}")'
+        \ , s:fzfBD_RCEfzf2relay_pipe
+        \, s:fzfBD_RCErelay2fzf_pipe)
+      " omg '\' * 11
+      " \ RCEChannel_executeInVim_shellscript('echom "tabnew +b\\\\\\\\\\\ " . FzfBD_getFzfBufnr("{}")', s:fzfBD_RCEfzf2relay_pipe)
+let s:fzfBD_RCEshellscript_ctrl_d =
+      \ RCEChannel_executeInVim_shellscript('execute "bdelete " . FzfBD_getFzfBufnr("{}")'
+        \ , s:fzfBD_RCEfzf2relay_pipe
+        \, s:fzfBD_RCErelay2fzf_pipe)
+let s:fzfBD_RCEshellscript_enter =
+      \ RCEChannel_executeInVim_shellscript('execute "TabDrop b " . FzfBD_getFzfBufnr("{}")'
+        \ , s:fzfBD_RCEfzf2relay_pipe
+        \, s:fzfBD_RCErelay2fzf_pipe)
+      " \ RCEChannel_executeInVim_shellscript('execute "TabDrop b " . FzfBD_getFzfBufnr("{}")'
+      "   \ , s:fzfBD_RCEfzf2relay_pipe)
+let s:fzfBD_RCEshellscript_testEchom =
+      \ RCEChannel_executeInVim_shellscript('echom "vim received:{}"'
+        \ , s:fzfBD_RCEfzf2relay_pipe
+        \, s:fzfBD_RCErelay2fzf_pipe)
+let s:optionBind_BD = "alt-a:select-all"
+let s:optionBind_BD .= ',ctrl-t:execute(' . s:fzfBD_RCEshellscript_ctrl_t . ')'
+let s:optionBind_BD .= ',ctrl-d:execute(' . s:fzfBD_RCEshellscript_ctrl_d . ')'
+let s:optionBind_BD .= ',ctrl-s:execute(' . s:fzfBD_RCEshellscript_ctrl_d . ')'
+" let s:optionBind_BD .= ',enter:execute(' . s:fzfBD_RCEshellscript_enter . ')'
 command! BD call fzf#run(fzf#wrap({
-  \ 'source': s:list_buffers(),
-  \ 'sink*' : function('s:delete_buffers'),
-  \ 'options': '--multi --reverse --bind ctrl-a:select-all+accept'
+  \ 'source': FzfBD_listBuffers(),
+  \ 'sink': function('FzfBD_tabDrop_sink'),
+  \ 'options': '--multi --reverse --bind ' . shellescape(s:optionBind_BD)
 \ }))
 
 nnoremap <C-b>D :BD<CR>
@@ -238,7 +273,7 @@ let g:fzf_vim.preview_window = ['hidden,right,70%,wrap', 'ctrl-/']
   " \ 'ctrl-q': function('fzf#vim#listproc#quickfix'),
 let g:fzf_action = {
   \ 'ctrl-q': function('s:build_quickfix_list'),
-  \ 'ctrl-d': function('s:delete_buffers'),
+  \ 'ctrl-d': function('FzfBD_deleteBuffers'),
   \ 'enter': function('s:FzfAction_tabDropWrapper'),
   \ 'ctrl-t': 'tabnew',
   \ 'ctrl-m': function('s:FzfPrintLines'),
@@ -257,8 +292,9 @@ nnoremap <leader>cp :silent! TabDrop cp<CR>
 " fzf popup mappings
 nnoremap <leader>ff :Files<CR>
 nnoremap <leader>fF :Files!<CR>
-nnoremap <leader>fb :Buffers<CR>
-nnoremap <leader>fB :Buffers!<CR>
+" nnoremap <leader>fb :Buffers<CR>
+" nnoremap <leader>fB :Buffers!<CR>
+nnoremap <leader>fb <cmd>BD<CR>
 let s:fzf_findAnything_historyFileName = 'fzf_fa'
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
@@ -381,7 +417,19 @@ let g:indentLine_char = '┊'
 " none X terminal
 let g:indentLine_color_tty_light = 0 " (default: 4)
 let g:indentLine_color_dark = 5 " (default: 2)
-                        " asdada
+
+if exists('g:indentLine_fileTypeExclude')
+  eval g:indentLine_fileTypeExclude->ListAppendUnique(g:specialFileType_list)
+else
+  let g:indentLine_fileTypeExclude = g:specialFileType_list
+endif
+
+if exists('g:indentLine_bufTypeExclude')
+  eval g:indentLine_bufTypeExclude->ListAppendUnique(g:specialBufferType_list)
+else
+  let g:indentLine_bufTypeExclude = g:specialBufferType_list
+endif
+
 
 " vim-autoswap config for tmux
 let g:autoswap_detect_tmux=1
@@ -465,9 +513,12 @@ augroup End
 " =======================================================================================================
 " Simpylfold, unfold all after fold creation (every new session)
 " adding SourcePost event because certain .vim file will ignore foldopen when sourcing ~/.vimrc
-autocmd BufWinEnter,SourcePost * silent! :%foldopen!
+autocmd! BufWinEnter,SourcePost * if &buftype=='' | try | silent! %foldopen! | catch | EchomWarn expand('<afile>') . "foldopen failed!" | endtry | endif
+" autocmd! BufWinEnter,SourcePost * if !IsSpecialBuffer(&filetype) | echom "???" | endif
 " set initial maximum nested folding level (only fold if nested over several level), just in case
 set foldlevelstart=3
+" don't fold docstring because some config file will have alot of them
+let g:SimpylFold_fold_docstring = 0
 
 " =======================================================================================================
 " Coc.nvim
@@ -515,8 +566,18 @@ nmap <silent> gi :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-impleme
 nmap <silent> gr :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-references)
 " even if this isn't coc option, the command are similar
 " expand expand '<cfile>' because <cfile> expand into file path, than file path string is expanded with wild card escaped
-nnoremap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| endif<CR>
-nnoremap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| tabprevious \| endif<CR>
+" nnoremap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| endif<CR>
+nnoremap <silent> gf <cmd>let g:cocJump_previousFile=expand('%:p')<CR><cmd>execute "TabDrop normal! gf"<CR>
+" nnoremap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| tabprevious \| endif<CR>
+nnoremap <silent> gF 
+  \
+  \<cmd>let g:cocJump_previousFile=expand('%:p')<CR>
+  \
+  \<cmd>execute "TabDrop normal! gf"<CR>
+  \
+  \<cmd>call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("if g:cocJump_previousFile != expand('%:p') \| tabprevious \| endif")})<CR>
+ 
+
 function! CocJump_DropLastJumpFile()
     if exists('g:cocJump_previousFile') && !empty(g:cocJump_previousFile)
         execute 'drop' g:cocJump_previousFile
@@ -587,7 +648,13 @@ inoremap <silent><expr> <Plug>CocNextCompletionCustom
         \ (CheckBackspace() ?
             \ "\<Tab>" :
             \ coc#refresh())
-imap <Tab> <Plug>CocNextCompletionCustom
+" crude auto indent
+" imap <expr> <Tab> (col('.') == 1) && (getline(line('.')-1) != '') ? '<C-w><CR><C-o>:if col(".") == 1 \| call feedkeys("\t", "n") \| endif<CR>' : '<Plug>CocNextCompletionCustom'
+function! TaborCompletion()
+  return (col('.') == 1) ? repeat("\<space>", ((line('.') <= 1 || indent(line('.') - 1) <= 0) ? shiftwidth() : indent(line('.') - 1))) : "\<Plug>CocNextCompletionCustom"
+endfunction
+imap <silent><expr> <Tab> TaborCompletion()
+
 
 function! ScrollAndPrev()
   call coc#pum#prev(1)
@@ -605,10 +672,6 @@ inoremap <silent><expr> <S-TAB>
 " let b:surround_{char2nr('_')} = "<_>\r</_>"
 " let b:surround_{char2nr('/')} = "</>\r</>"
 " let b:surround_{char2nr('\')} = "</>\r</>"
-
-" Simpylfold
-" don't fold docstring because some config file will have alot of them
-let g:SimpylFold_fold_docstring = 0
 
 " Plugin mappings END
 " =======================================================================================================

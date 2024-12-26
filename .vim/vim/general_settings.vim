@@ -1,3 +1,10 @@
+" global variables
+let g:env_shellscript_path = fnamemodify("~/.vim/vim", ':p') . 'shellscript/'
+if !isdirectory(g:env_shellscript_path)
+  call mkdir(g:env_shellscript_path)
+endif
+let &path.="," . $CPATH->split(':')->join(',')
+
 " tabline settings
 set showtabline=2 " always show tabline even for 1 tab
 
@@ -207,7 +214,7 @@ augroup filetype_indent
   autocmd BufEnter *.c setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter *.cpp setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter *.h setlocal expandtab tabstop=2 shiftwidth=2
-  autocmd BufEnter * execute 'IndentLinesReset'
+  " autocmd BufEnter * execute 'IndentLinesReset'
 augroup END
 
 " Show “invisible” characters
@@ -281,3 +288,5 @@ if &term =~ '^xterm'
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
+
+

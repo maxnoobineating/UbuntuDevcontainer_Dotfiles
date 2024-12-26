@@ -1,5 +1,20 @@
 " #===================================================================================#
+" large change warning for when accidental changes covers most of window s.t. it goes unnoticed
+let s:prev_yankreg = ''
+function! MiscFunc_checkForLargeChange()
+  let l:change_tolerance = getwininfo(win_getid())[0]['height'] * 0.40
+  if (s:prev_yankreg != @" && count(@", "\n") >= l:change_tolerance) || abs(line("'[") - line("']")) >= l:change_tolerance
+    echohl WarningMsg | echo "Warning! major changes to the buffer" | echohl None
+  endif
+  let s:prev_yankreg = @"
+endfunction
+augroup MiscOnChange
+  autocmd! TextChanged * if &buftype == '' | call MiscFunc_checkForLargeChange() | endif
+augroup END
 
+
+" don't do :R, you'll accidentally trigger :r
+nnoremap <C-w>r <cmd>source ~/.vimrc<CR>
 
 " map nnoremap r to macro recording (q), because r replacement mode single replace is useless (R line replace is still there)
 if maparg('q', 'n')==''
@@ -55,7 +70,7 @@ cnoremap <expr> <A-l> getcmdtype()=='/' \|\| getcmdtype()=='?' ? "<CR>``" : "<CR
 
 
 " mouse click for displaying synID
-nnoremap <leftmouse> <leftmouse>:echo "synID(line=" . line('.') . ", col=" . col('.') .  ") = " . synID(line('.'), col('.'), 0)<CR>
+nnoremap <leftmouse> <leftmouse>:echom "synID(line=" . line('.') . ", col=" . col('.') .  ") = " . synID(line('.'), col('.'), 0)<CR>
 
 " the holy ctrl-s
 nnoremap <C-s> :wa<CR>
@@ -73,10 +88,19 @@ function! OpenManpage()
   if(l:text == "")
     return
   endif
-  execute "TabDrop Man " . l:text
-  " disable special character display
-  execute "setlocal nolist"
-  " replaced inside ~/.vim/ftplugin
+  let l:manpage_msg = ''
+  " let old_eventignore = &eventignore
+  " let &eventignore.=',User ALEWantResults'
+  redir => l:manpage_msg
+    silent! execute "TabDrop Man " . l:text
+  redir END
+  " let &eventignore = l:old_eventignore
+  " return cursor to beginning for later messaage to write properly
+  " echom l:manpage_msg
+  " XXX below is due to IndentLinesReset autocmd...
+  " workaround indentline exclude not working properly
+  " call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("call feedkeys(\":IndentLinesDisable\\<CR>\")") })
+  " autocmd! CursorMoved,CursorHold * ++once call feedkeys(":IndentLinesDisable\<CR>")
 endfunction
 nnoremap <leader>! :call OpenManpage()<CR>
 
@@ -93,7 +117,12 @@ function! OpenHelpFile()
   if(l:text == "")
     return
   endif
-  silent call TabDropCMD("help " . l:text)
+  try
+    silent call TabDropCMD("help " . l:text)
+  catch
+    echo "\rNo help page found for " . l:text
+    return
+  endtry
   " execute "tab help " . l:text
   execute "tag /" . l:text
 endfunction
@@ -201,9 +230,6 @@ nnoremap <C-b>d :bd<CR>
 inoremap <C-k> <C-o>d$
 inoremap <C-b> <C-o>d^
 
-" crude auto indent
-" imap <expr> <Tab> (col('.') == 1) && (getline(line('.')-1) != '') ? '<C-w><CR><C-o>:if col(".") == 1 \| call feedkeys("\t", "n") \| endif<CR>' : '<Plug>CocNextCompletionCustom'
-
 " undo line with <leader>ul
 nnoremap <leader>ul U
 nnoremap U <C-r>
@@ -227,39 +253,52 @@ function! ReplaceWithInput() abort
   endif
   let l:replacement_text = escape(l:replacement_text, '\/.^$*[]~')
   " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
-  " let [l:pattern_firstHalf, l:pattern_secondHalf] = RangedPattern_startFromCursor_WrapAround(@h)
-  let l:firstHalf_start = [l:cusline, l:cuscol]
-  let l:firstHalf_end = [line('$'), col([line('$'), '$'])]
-  let l:pattern_firstHalf = RangedPattern(l:firstHalf_start, l:firstHalf_end, @h)
-  " echom "%s/" . l:pattern_firstHalf ."//ce"
+  let [l:pattern_firstHalf, l:pattern_secondHalf] = RangedPattern_startFromCursor_WrapAround(@h)
   execute "%s/" . l:pattern_firstHalf ."/" . l:replacement_text . "/ce"
-  " execute '.,$s/' . '\%>' . (l:cusline-1) . 'l' . l:old_pattern . '/' . l:replacement_text . '/ce'
   echo 'wrapped around EOF'
-  let l:secondHalf_start = [1, 1]
-  let l:secondHalf_end = l:cuscol <= 1 ? [l:cusline - 1, col([line('$') - 1, '$'])] : [l:cusline, l:cuscol - 1]
-  let l:pattern_secondHalf = RangedPattern(l:secondHalf_start, l:secondHalf_end, @h)
-  " echom "%s/" . l:pattern_secondHalf ."//ce"
   execute "%s/" . l:pattern_secondHalf ."/" . l:replacement_text . "/ce"
-  " execute '1,' . l:cusline . 's/' . l:old_pattern . '/' . l:replacement_text . '/ce'
 endfunction
 vnoremap <silent> <C-r> "hy:<C-u>silent call ReplaceWithinput()<CR>
 " if cursor on top of match highlights, enter replacing commands
 " nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
 " matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
 nnoremap <silent> <expr> <C-r> IsOnMatch() ? ':let @h=@/<CR>:call ReplaceWithInput()<CR>' : '<C-r>'
-
+ 
 
 " mapping yh
-function! ConfirmAndAppend(match)
-    " Ask the user if they want to append the match to the register
-    " if confirm("Append this match to register a? " . a:match, "&Yes\n&No") == 1
-    call setreg('0', a:match . "\n", 'a')
-    " endif
-    return a:match  " Replace the match with itself
+let s:confirmAndAppend_modificationTimes = 0
+function! s:ConfirmAndAppend(match)
+  if s:confirmAndAppend_modificationTimes != 0
+    noautocmd undojoin
+  endif
+  noautocmd let s:confirmAndAppend_modificationTimes += 1
+  noautocmd call setreg('0', a:match . "\n", 'a')
+  noautocmd return a:match
+endfunction
+
+function! YankAppendHighlighted() range
+  let @0 = ''
+  set hlsearch
+  call search(@/, 'cw')
+  let [l:pattern_firstHalf, l:pattern_secondHalf] = RangedPattern_startFromCursor_WrapAround(@/)
+  let old_pattern = @/
+  let s:confirmAndAppend_modificationTimes = 0
+  noautocmd let [old_modiviable, old_readonly] = [&modifiable, &readonly]
+  noautocmd setlocal modifiable
+  noautocmd setlocal noreadonly
+  noautocmd let @/ = l:pattern_firstHalf
+  noautocmd %s//\=s:ConfirmAndAppend(submatch(0))/ce
+  noautocmd let @/ = l:pattern_secondHalf
+  noautocmd %s//\=s:ConfirmAndAppend(submatch(0))/ce
+  noautocmd let @/ = l:old_pattern
+  " noautocmd execute s:confirmAndAppend_modificationTimes . "undo" 
+  " noautocmd undo
+  noautocmd let [&modifiable, &readonly] = [l:old_modiviable, l:old_readonly]
 endfunction
 " save all matching into register separated by \n
 " nnoremap yh :let @0=''<CR>:%s//\=ConfirmAndAppend(submatch(0))/c<CR>doautocmd WSLYank TextYankPost<CR>
 " nnoremap yh :let @0=''<CR>:%s/\v(\_.+)/\=ConfirmAndAppend(submatch(0))/gn<CR>doautocmd WSLYank TextYankPost<CR>
+nnoremap yh <cmd>call YankAppendHighlighted() \| call ExportClipboard(@0)<CR>
 
 
 function! CursorOutsideMatch(match) abort
@@ -378,6 +417,7 @@ function! NearestMatch(flag) abort
     endfor
     return {}
 endfunction
+
 function! SelectNextMatch(flag) abort
     let l:next_match = NearestMatch(a:flag)
     if empty(l:next_match)
@@ -388,6 +428,7 @@ function! SelectNextMatch(flag) abort
     execute 'normal! v' . l:next_match.start[0] . 'G' . l:next_match.start[1] . '|o' . l:next_match.end[0] . 'G' . l:next_match.end[1] . "|\<Esc>gv"
     " call input( 'range: ' . getpos("'<")[1] . ', ' . getpos("'<")[2])
 endfunction
+
 function! IsSelected() abort
     let l:current_match = NearestMatch(0)
     if empty(l:current_match)
@@ -395,6 +436,7 @@ function! IsSelected() abort
     endif
     return getpos("'<")[1:2] == l:current_match.start && getpos("'>")[1:2] == l:current_match.end
 endfunction
+
 function! VerityHighlight_N(flag) abort
     if IsOnMatch()
         call SelectNextMatch(0)
@@ -402,6 +444,7 @@ function! VerityHighlight_N(flag) abort
         call SelectNextMatch(a:flag)
     endif
 endfunction
+
 function! VerityHighlight_V(flag) abort
     if !IsSelected() && IsOnMatch()
         call SelectNextMatch(0)
@@ -541,9 +584,7 @@ nnoremap <expr> <f2> &signcolumn == 'yes' ? ":set signcolumn=no number! relative
 " replace default gd behaviour (if you want highlighing word under cursor, use *)
 " !replaced by coc-definition
 " nnoremap <expr> gd getline('.')[col('.') - 2 : col('.') + len(@/) - 2] == @/ ? "*<C-]>" : "*<C-]>n"
-
-
-cmap w!! w !sudo tee % > /dev/null
+" cmap w!! w !sudo tee % > /dev/null
 
 " Insert mode quick deletion
 " imap <C-BS> <C-W>
@@ -644,14 +685,17 @@ endfunction
     " voremap d ""d
     vnoremap D "0d
     " nnoremap d ""d
-    nnoremap D "0dd
+    nnoremap D "0d
+    nnoremap DD "0dd
     " nnoremap dd "0dd
-
 " endif
 " 6/28/2024, dunno why but the SystemCall check suddenly passed without X11, disabling it
 
 " custom host yank support
 let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
+function! ExportClipboard(text)
+  call writefile(split(a:text, '\(\n\|\n\r\)', 1), s:clipboard_export, 'b')
+endfunction
 if filereadable(s:clipboard_export)
   augroup WSLYank
     autocmd!
@@ -659,7 +703,7 @@ if filereadable(s:clipboard_export)
     " autocmd TextYankPost * if v:event.operator ==# 'y' | call system('echo ' . shellescape(@0) . ' > ' . s:clipboard_export) | endif
     " autocmd TextYankPost * if v:event.operator =~# 'y' | call system('echo ' . shellescape(substitute(@0, '\n$', '', '')) . ' > ' . s:clipboard_export) | endif
     " to deal with '\0' literal, using echo will just interpret it as NULL character
-    autocmd TextYankPost * if v:event.operator =~# '\(d\|y\)' | call writefile(split(@0, '\(\n\|\n\r\)', 1), s:clipboard_export, 'b') | endif
+    autocmd TextYankPost * if v:event.operator =~# '\(d\|y\)' | call ExportClipboard(@0) | endif
     " autocmd TextYankPost * if v:event.operator =~# 'y' | echo 'bababooboo' . s:clipboard_export | endif
   augroup END
 endif
@@ -679,10 +723,20 @@ nnoremap O O<Esc>==
 
 " this is how you map alt-key ! turning it into a proper keycode that vim can interpret (quick succession of the code within ttimeoutlen)
 " noted, the ^[ is not literal, you need to i_<C-q> + <Esc> to type it out
-set <A-o>=o
-set <A-O>=*O
-inoremap <A-o> <C-o>o<C-o>==
-inoremap <A-O> <C-o>O<C-o>==
+set <M-o>=o
+" this doesn't work because f1~f3 keycode starts with O
+" , so keycode for <alt-shift-o>==O will be pending and not interpreted
+" set <M-O>=O
+" from your terminal (if you can) modify <alt-shift-o> to send a self-defined keycode
+" e.g. Windows terminal ("\u001b" == ) :
+" {"command": {"action": "sendInput","input": "\u001bOO"}, "keys": "alt+shift+o"}
+" see "ANSI control sequence (specifically - introducer command)"
+" https://en.wikipedia.org/wiki/ANSI_escape_code
+set <M-O>=OO
+
+inoremap <M-o> <C-o>o<C-o>==
+inoremap <M-O> <C-o>O<C-o>==
+" inoremap <M-O> <cmd>echom "asda"<CR>
 
 " a hack, I believe it works without affecting alt-o because alt-key escape combo is counted towards ttimeout (it's a key sequence), and ttimeout is set
 " inoremap <nowait> <Esc> <Esc>
@@ -694,10 +748,39 @@ inoremap <A-O> <C-o>O<C-o>==
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
 " above)
-inoremap <expr> <nowait> <Up> col(".") == 1 ? "<Esc>ki" : "<Esc>ka"
-inoremap <expr> <nowait> <Down> col(".") == 1 ? "<Esc>ji" : "<Esc>ja"
-inoremap <expr> <nowait> <Left> col(".") == 1 ? "<Esc>k$a" : "<Esc>i"
-inoremap <expr> <nowait> <Right> col(".") == col("$") ? "<Esc>j0i" : (col(".") == 1 ? "<Esc>li" : "<Esc>la")
+function! MiscMap_insertUp()
+  let [curline, curcol] = [line('.'), col('.')]
+  call cursor([l:curline-1, l:curcol])
+endfunction
+function! MiscMap_insertDown()
+  let [curline, curcol] = [line('.'), col('.')]
+  call cursor([l:curline+1, l:curcol])
+endfunction
+function! MiscMap_insertLeft()
+  let [curline, curcol] = [line('.'), col('.')]
+  if l:curcol <= 1 && l:curline > 1
+    call cursor([l:curline-1, 1])
+    call cursor([l:curline-1, col('$')])
+  else
+    call cursor([l:curline, l:curcol-1])
+  endif
+endfunction
+function! MiscMap_insertRight()
+  let [curline, curcol] = [line('.'), col('.')]
+  if l:curcol >= col('$') && l:curline < line('$')
+    call cursor([l:curline+1, 1])
+  else
+    call cursor([l:curline, l:curcol+1])
+  endif
+endfunction
+inoremap <nowait> <Up> <cmd>call MiscMap_insertUp()<CR>
+inoremap <nowait> <Down> <cmd>call MiscMap_insertDown()<CR>
+inoremap <nowait> <Left> <cmd>call MiscMap_insertLeft()<CR>
+inoremap <nowait> <Right> <cmd>call MiscMap_insertRight()<CR>
+" inoremap <expr> <nowait> <Up> col(".") == 1 ? "<Esc>ki" : "<Esc>ka"
+" inoremap <expr> <nowait> <Down> col(".") == 1 ? "<Esc>ji" : "<Esc>ja"
+" inoremap <expr> <nowait> <Left> col(".") == 1 ? "<Esc>k$a" : "<Esc>i"
+" inoremap <expr> <nowait> <Right> col(".") == col("$") ? "<Esc>j0i" : (col(".") == 1 ? "<Esc>li" : "<Esc>la")
 
 " same in normal mode
 nnoremap <nowait> <Up> k
@@ -794,4 +877,4 @@ noremap <leader>ws :call StripWhitespace()<CR>
 noremap <leader>W :w !sudo tee % > /dev/null<CR>
 
 " :reload vim
-command R source ~/.vimrc
+" command R source ~/.vimrc
