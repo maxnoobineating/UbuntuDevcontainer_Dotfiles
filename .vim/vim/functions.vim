@@ -1,8 +1,60 @@
 "=============================================================================="
 " Functions
+" range compare
+" function! RangeComp(lrange, rrange)
+"   " return -2 for [  ] < >, -1 for [ < ] > , 0 for {  }, 1 for < [ > ], 2 for < > [  ]
+"   if lrange[0] < rrange[0] || (lrange[0] == rrange[0] && lrange[1] < rrange[1])
+"   elseif lrange[0] < rrange[0] || (lrange[0] == rrange[0] && lrange[1] < rrange[1])
+"   elseif lrange[0] < rrange[0] || (lrange[0] == rrange[0] && lrange[1] < rrange[1])
+"   elseif lrange[0] < rrange[0] || (lrange[0] == rrange[0] && lrange[1] < rrange[1])
+"   endif
+" endfunction
+
+" timer
+let s:reltimeTimer_tracker = {}
+function! ReltimeTimer_mus(name, time)
+" v:true if it's over a:time since last time ReltimeTimer(a:name, ...) is called
+  let reltime_diff = ReltimeDiff(reltime(), s:reltimeTimer_tracker->get(a:name, [0, 0]))
+  let s:reltimeTimer_tracker[a:name] = reltime()
+  return reltime_diff > a:time
+endfunction
+function! ReltimeTimer(name, time)
+  return ReltimeTimer_mus(a:name, a:time * 1000000)
+endfunction
+
+" &tagfunc= called by :tag... etc 
+function! TestTagfunc(pattern, flag, info)
+  echom "pattern: " . string(a:pattern)
+  echom "flag: " . string(a:flag)
+  echom "info: " . string(a:info)
+  return [{'name': 'haha', 'filename': './nani', 'cmd': "read ./~zshrc"}]
+endfunction
+
+" keystroke capturing abstract
+" XXX it's recursive with feedkeys...
+" function! CaptureKeyMapping(mapFunc)
+"   " mapFunc is a funcref that takes a list (representing keypresses recorded so far), returns 1 to continue capturing, 0 to exit
+"   let recording = []
+"   while(1)
+"     let l:recording += [getchar()]
+"     if !a:mapFunc(l:recording)
+"       return
+"     endif
+"   endwhile
+" endfunction
+" " nnoremap <C-t><C-t>
+" function! CKInput(keysList)
+"   if(nr2char(a:keysList[-1]) ==# "\<CR>")
+"     return v:false
+"   endif
+"   echom "you pressed [" . nr2char(a:keysList[-1]) . "]"
+"   call feedkeys(nr2char(a:keysList[-1]))
+"   return v:true
+" endfunction
+" inoremap <nowait> <C-t> <cmd>call CaptureKeyMapping(function('CKInput'))<CR>
 
 " warning echom
-command! -nargs=* EchomWarn echohl WarningMsg | echo <q-args> | echohl None
+command! -nargs=* EchomWarn echohl WarningMsg | echo <args> | echohl None
 
 " return funcref for executing command, return v:true if executed without error
 function! CMDFunc(cmd)
@@ -55,6 +107,17 @@ endfunction
 
 " autocmd SourcePre * ++once command! presource -nargs=*
 command! -nargs=* Sourcepost execute "autocmd SourcePost * ++once ++nested " . <q-args>
+
+" Clear unused buffers
+function! CloseUnusedBuffers()
+  for bufinfo in getbufinfo()
+    " echom "bufnr: " . l:bufinfo.bufnr . ", name: " . l:bufinfo.name
+    if !filereadable(l:bufinfo.name) && !l:bufinfo.changed
+      " echom "out!"
+      execute "bdelete " . l:bufinfo.bufnr
+    endif
+  endfor
+endfunction
 
 " special type of buffer/file
 let g:specialFileType_list = ["help", "man"]

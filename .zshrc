@@ -1,3 +1,20 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+
+# go path
+export GOPATH=$HOME/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:$GOBIN
+
+# set time zone
+# TZ='Asia/Taipei'; export TZ
+TZ='America/Los_Angeles'; export TZ
+
 # C environment setup
 export VERITY_LIBRARY_PATH="$HOME/nand2tetris_volumn/myLib"
 # include path as if compiled with -I<dir> option
@@ -25,13 +42,6 @@ export MANROFFOPT="-c"
 # built-in completion enable
 autoload -Uz compinit
 compinit
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
 
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
@@ -326,3 +336,5 @@ export NVM_DIR="$HOME/.nvm"
 alias nvim="~/nvim-linux64/bin/nvim"
 
 OSSUDIR="$HOME/Desktop/Core system/nand2tetris_1"; alias b2w='cd $OSSUDIR'
+
+

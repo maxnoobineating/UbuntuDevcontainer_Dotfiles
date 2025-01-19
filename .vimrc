@@ -12,6 +12,7 @@ source $HOME/.vim/vim/functions.vim
 " TODO export below 2 as its own plugin / move to ../plugin as extension of individual plugins
 source $HOME/.vim/vim/customPlugins.vim
 source $HOME/.vim/vim/plugin_configs.vim
+source $HOME/.vim/vim/plugin_configs_directory.vim
 source $HOME/.vim/vim/misc_mappings.vim
 source $HOME/.vim/vim/debugger.vim
 source $HOME/.vim/vim/post_config.vim

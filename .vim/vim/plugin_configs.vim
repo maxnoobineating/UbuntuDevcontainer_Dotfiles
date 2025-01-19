@@ -105,13 +105,53 @@ call plug#begin('~/.vim/plugged')
     Plug 'mbbill/undotree'
 
     " automatic tag generation
-    Plug 'ludovicchabant/vim-gutentags'
+    " Plug 'ludovicchabant/vim-gutentags'
+
+    " go development package
+    Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+
+    " custom text object
+    Plug 'kana/vim-textobj-user'
 
 call plug#end()
 
 
 " ############################# "
 " Plugin mapping & configuration:
+" textobj
+
+
+" vim-go
+let g:go_diagnostics_level = 0
+let g:go_diagnostics_enabled = 0
+let g:go_metalinter_enabled = []
+let g:go_def_mode='gopls'
+let g:go_info_mode='gopls'
+let g:go_doc_keywordprg_enabled = 0
+let g:go_def_mapping_enabled = 0
+let g:go_doc_popup_window = 1
+let g:go_highlight_chan_whitespace_error = 1
+let g:go_highlight_extra_types = 1
+let g:go_highlight_space_tab_error = 1
+let g:go_highlight_trailing_whitespace_error = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_function_parameters = 1
+let g:go_highlight_function_calls = 1
+let g:go_highlight_types = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_build_constraints = 1
+let g:go_highlight_generate_tags = 1
+let g:go_highlight_string_spellcheck = 1
+let g:go_highlight_format_strings = 1
+let g:go_highlight_variable_declarations = 1
+let g:go_highlight_variable_assignments = 1
+let g:go_highlight_diagnostic_errors = 1
+let g:go_highlight_diagnostic_warnings = 1
+
+
+" gutentags setup
+" autocmd VimEnter  *  if expand('<amatch>')==''|call gutentags#setup_gutentags()|endif
 
 " startify
 " disable notimeout in startify, because the session indices selection no longer works (number pending further command indefinitely)
@@ -127,7 +167,7 @@ nnoremap <C-w><C-s> :SSave<CR>
 let g:startify_session_persistence = 1
 
 " let g:startify_session_before_save = [ 'silent! call CloseBuffersType("help")', 'silent! call CloseBuffersType("man")']
-let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()']
+let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()', 'silent! call CloseUnusedBuffers()']
 let g:startify_session_savevars = [
       \ 'g:startify_session_savevars',
       \ 'g:startify_session_savecmds'
@@ -150,220 +190,6 @@ let NERDTreeHijackNetrw = 0
 nnoremap <F5> :UndotreeToggle<CR>
 
 " =====================================================
-" fzf.vim
-" search syntax: https://github.com/junegunn/fzf#search-syntax
-" Initialize configuration dictionary
-let g:fzf_vim = {}
-
-" [Buffers] Jump to the existing window if possible
-let g:fzf_vim.buffers_jump = 1
-" [Tags] Command to generate tags file
-let g:fzf_vim.tags_command = 'ctags -R'
-
-
-" ##########
-"FZF Buffer Delete
-" author: https://www.reddit.com/r/neovim/comments/mlqyca/fzf_buffer_delete/
-function! FzfBD_listBuffers()
-  redir => list
-  silent ls
-  redir END
-  return split(list, "\n")
-endfunction
-
-function! FzfBD_deleteBuffers(lines)
-  echo "FzfBD_deleteBuffers: " . string(a:lines)
-  execute 'bdelete!' join(map(a:lines, {_, line -> split(line)[0]}))
-endfunction
-
-function! FzfBD_tabDrop_sink(line)
-  execute "TabDrop b " . FzfBD_getFzfBufnr(a:line)
-endfunction
-
-function! FzfBD_getFzfBufnr(fzf_output)
-  echom "FzfBD_getFzfBufnr(" . string(a:fzf_output) . ")"
-  let fzf_list = split(a:fzf_output, " ")
-  " echom string(split(a:fzf_output, " "))
-  return str2nr(fzf_list[0])
-endfunction
-
-let s:fzfBD_listeningServerName = 'fzfBD'
-let s:fzfBD_RCEServer_handle = RCEChannel_RCEServerStart(s:fzfBD_listeningServerName)
-let [s:fzfBD_RCEfzf2relay_pipe, s:fzfBD_RCErelay2fzf_pipe, s:fzfBD_RCEjobid] = s:fzfBD_RCEServer_handle
-let s:fzfBD_RCEshellscript_ctrl_t =
-      \ RCEChannel_executeInVim_shellscript('execute ' . shellescape('tabnew +b\\\\ ') . '. FzfBD_getFzfBufnr("{}")'
-        \ , s:fzfBD_RCEfzf2relay_pipe
-        \, s:fzfBD_RCErelay2fzf_pipe)
-      " omg '\' * 11
-      " \ RCEChannel_executeInVim_shellscript('echom "tabnew +b\\\\\\\\\\\ " . FzfBD_getFzfBufnr("{}")', s:fzfBD_RCEfzf2relay_pipe)
-let s:fzfBD_RCEshellscript_ctrl_d =
-      \ RCEChannel_executeInVim_shellscript('execute "bdelete " . FzfBD_getFzfBufnr("{}")'
-        \ , s:fzfBD_RCEfzf2relay_pipe
-        \, s:fzfBD_RCErelay2fzf_pipe)
-let s:fzfBD_RCEshellscript_enter =
-      \ RCEChannel_executeInVim_shellscript('execute "TabDrop b " . FzfBD_getFzfBufnr("{}")'
-        \ , s:fzfBD_RCEfzf2relay_pipe
-        \, s:fzfBD_RCErelay2fzf_pipe)
-      " \ RCEChannel_executeInVim_shellscript('execute "TabDrop b " . FzfBD_getFzfBufnr("{}")'
-      "   \ , s:fzfBD_RCEfzf2relay_pipe)
-let s:fzfBD_RCEshellscript_testEchom =
-      \ RCEChannel_executeInVim_shellscript('echom "vim received:{}"'
-        \ , s:fzfBD_RCEfzf2relay_pipe
-        \, s:fzfBD_RCErelay2fzf_pipe)
-let s:optionBind_BD = "alt-a:select-all"
-let s:optionBind_BD .= ',ctrl-t:execute(' . s:fzfBD_RCEshellscript_ctrl_t . ')'
-let s:optionBind_BD .= ',ctrl-d:execute(' . s:fzfBD_RCEshellscript_ctrl_d . ')'
-let s:optionBind_BD .= ',ctrl-s:execute(' . s:fzfBD_RCEshellscript_ctrl_d . ')'
-" let s:optionBind_BD .= ',enter:execute(' . s:fzfBD_RCEshellscript_enter . ')'
-command! BD call fzf#run(fzf#wrap({
-  \ 'source': FzfBD_listBuffers(),
-  \ 'sink': function('FzfBD_tabDrop_sink'),
-  \ 'options': '--multi --reverse --bind ' . shellescape(s:optionBind_BD)
-\ }))
-
-nnoremap <C-b>D :BD<CR>
-" ##########
-
-" An action can be a reference to a function that processes selected lines
-function! s:build_quickfix_list(lines)
-  let qflist = []
-  for line in a:lines
-    let [filename, linenr, colnr] = split(l:line, ':')[:2]
-    let l:qflist += [{"filename": l:filename , "lnum": l:linenr}]
-  endfor
-  echom string(l:qflist)
-  silent call setqflist(l:qflist)
-  " silent TabDrop copen
-endfunction
-" \ 'ctrl-q': function('s:build_quickfix_list') // unwieldy because ag doesn't supports function call for items
-" just use default quickfix
-let g:fzf_vim.listproc = { list -> fzf#vim#listproc#quickfix(list) }
-
-function! s:FZFTestEchom(lines)
-  echom "##:" . string(a:lines)
-  " supposedly keep fzf from closing?
-  return 0
-endfunction
-
-function! s:FzfAction_tabDropWrapper(lines)
-  if len(a:lines) == 1
-    let [filename, linenr, colnr] = split(a:lines[0], ':')[:2]
-    silent execute "TabDrop tabnew " . filename
-    call cursor(l:linenr, l:colnr)
-  elseif len(a:lines) > 1
-    for line in a:lines
-      let [filename, linenr, colnr] = split(l:line, ':')[:2]
-      silent execute "TabDrop tabnew " . filename
-      call cursor(l:linenr, l:colnr)
-    endfor
-  endif
-endfunction
-
-function! s:FzfPrintLines(lines)
-  " echom join(map(a:lines, function('string')), '\n')
-  " echom join(a:lines, '\n')
-  echom "### Fzf selected lines arguments: ###"
-  for line in a:lines
-    echom l:line
-  endfor
-  return 0
-endfunction
-
-let g:fzf_vim.preview_window = ['hidden,right,70%,wrap', 'ctrl-/']
-  " \ 'ctrl-q': function('fzf#vim#listproc#quickfix'),
-let g:fzf_action = {
-  \ 'ctrl-q': function('s:build_quickfix_list'),
-  \ 'ctrl-d': function('FzfBD_deleteBuffers'),
-  \ 'enter': function('s:FzfAction_tabDropWrapper'),
-  \ 'ctrl-t': 'tabnew',
-  \ 'ctrl-m': function('s:FzfPrintLines'),
-  \ 'ctrl-x': 'split',
-  \ 'ctrl-v': 'vsplit' }
-let g:fzf_history_dir = '~/.local/share/fzf-history'
-" quickfix list (technically doesn't belong here) stepping
-" in fzf popup, <alt-a> to select all, enter to add all to the quickfix list, then using this to step over them
-
-
-" nnoremap <C-j> :cn<CR>
-" nnoremap <C-k> :cp<CR>
-nnoremap <leader>cn :silent! TabDrop cn<CR>
-nnoremap <leader>cp :silent! TabDrop cp<CR>
-
-" fzf popup mappings
-nnoremap <leader>ff :Files<CR>
-nnoremap <leader>fF :Files!<CR>
-" nnoremap <leader>fb :Buffers<CR>
-" nnoremap <leader>fB :Buffers!<CR>
-nnoremap <leader>fb <cmd>BD<CR>
-let s:fzf_findAnything_historyFileName = 'fzf_fa'
-command! -bang -nargs=* Rg
-  \ call fzf#vim#grep(
-  \   "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>), 1,
-  \   fzf#wrap(s:fzf_findAnything_historyFileName, fzf#vim#with_preview('right:hidden:70%', 'ctrl-/'), <bang>0), <bang>0)
-nnoremap <leader>fa :Rg<CR>
-nnoremap <leader>fA :Rg!<CR>
-nnoremap <leader>ft :Tags<CR>
-nnoremap <leader>fT :Tags!<CR>
-nnoremap <leader>fl :BLines<CR>
-nnoremap <leader>fL :Lines<CR>
-" alternative *man* *manpage* *:Man* with fzf search, author: "https://www.reddit.com/r/vim/comments/mg8ov7/fuzzily_searching_man_pages_using_fzfvim/"
-" command! -nargs=? Apropos call fzf#run(fzf#wrap({'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1', 'sink': 'tab Man', 'options': ['--preview', "MANPAGER=\"sh -c 'col -bx | batcat -l man -p'\" MANWIDTH=".(&columns/2-4).' man {}']}))
-let s:fzf_findManpage_historyFileName = "fzf_fm"
-command! -nargs=? Apropos call fzf#run(
-  \ fzf#wrap(
-    \ s:fzf_findManpage_historyFileName,
-    \ {'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1',
-      \ 'sink': 'tab Man',
-      \ 'options': ['--preview',
-        \ " man {} | sh -c 'col -bx | batcat --color=always  -l man -p'",
-        \ '--preview-window=nohidden,wrap,70%']}))
-" command! -nargs=? Apropos call fzf#run(fzf#wrap({'source': 'man -k -s 1 '.shellescape(<q-args>).' | cut -d " " -f 1', 'sink': 'tab Man', 'options': ['--preview', "man {}"]}))
-nnoremap <leader>fm :Apropos<CR>
-
-" change directory with fzf, author: "https://github.com/craigmac/vimfiles/blob/17ed01fb597f14ec8b2c0d1dc41e72c17ff69d41/vimrc#L228"
-" command! -bang -bar -nargs=? -complete=dir FZFCd
-" 	\ call fzf#run(fzf#wrap(
-" 	\ {'source': 'find '..( empty("<args>") ? ( <bang>0 ? "~" : "." ) : "<args>" ) ..
-" 	\ ' -type d -maxdepth 1', 'sink': 'cd'}))
-" not what I wanted
-
-"fzf change directory
-function! FzfExplore(...)
-  if a:1 =~ "enter"
-    return
-  elseif a:1 =~ "ctrl-t"
-    execute "tabnew"
-  elseif a:1 =~ "ctrl-v"
-    execute "vnew"
-  elseif a:1 =~ "ctrl-s"
-    execute "new"
-  else
-    let inpath = substitute(a:1, "'", '', 'g')
-    echo matchend(inpath, '/')
-    if inpath == "" || matchend(inpath, '/') == strlen(inpath)
-      execute "cd" getcwd() . '/' . inpath
-      let cwpath = getcwd() . '/'
-      let cmd = 'ls -1p; echo ../'
-      let spec = fzf#vim#with_preview({'source': cmd, 'dir': cwpath, 'sink': 'FZFExplore', 'options': ['--prompt', cwpath, '--expect=ctrl-t,ctrl-v,ctrl-s,enter']})
-      call fzf#run(fzf#wrap(spec))
-    else
-      let file = getcwd() . '/' . inpath
-      execute "e" file
-      set acd
-    endif
-  endif
-endfunction
-command! -nargs=* FZFExplore set noacd | call FzfExplore(<q-args>)
-
-
-
-" open all vim mappings table
-nmap <leader>mn <plug>(fzf-maps-n)
-nmap <leader>mi <plug>(fzf-maps-i)
-nmap <leader>mv <plug>(fzf-maps-x)
-omap <leader>mo <plug>(fzf-maps-o)
-" <leader>mm implemented seperately
-" =====================================================
 
 " vim slime
 let g:slime_target = "tmux"
@@ -384,11 +210,14 @@ let g:python_highlight_all = 1
 " ALE linter setting
 " let g:ale_disable_lsp = 1
 " 1 for enabling all linters
+let g:ale_sign_error = '✗'
+let g:ale_sign_warning = '⚠️'
+let g:ale_virtualtext_cursor = 1
 let g:ale_linters_explicit = 0
 let g:ale_linters = {'javascript': [],
             \ 'python': ['flake8'],
             \ 'rust': [],
-            \ 'go': [],
+            \ 'go': ['golangci-lint'],
             \ 'bash': ['shellcheck'],
             \ 'sh': ['shellcheck'],
             \ 'tex': ['chktex'],
@@ -490,7 +319,7 @@ nmap <F8> :TagbarToggle fjc<CR>
 " auto tags generation on save
 augroup CTagGeneration
     autocmd!
-    au BufWritePost * silent! call system('ctags ' . expand('%:p') . '2>&1 >/dev/null &')
+    " au BufWritePost * silent! call system('ctags -R' . expand('%:p') . '2>&1 >/dev/null &')
     " au BufWinEnter *  expend('%:p')
 augroup END
 
@@ -530,7 +359,8 @@ let g:coc_global_extensions = [
 \ 'coc-pyright',
 \ 'coc-json',
 \ 'coc-clangd',
-\ 'coc-snippets'
+\ 'coc-snippets',
+\ 'coc-go'
 \ ]
 let g:coc_start_at_startup = 1
 " set timeout timeoutlen=600 ttimeoutlen=100
@@ -567,13 +397,13 @@ nmap <silent> gr :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-referen
 " even if this isn't coc option, the command are similar
 " expand expand '<cfile>' because <cfile> expand into file path, than file path string is expanded with wild card escaped
 " nnoremap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| endif<CR>
-nnoremap <silent> gf <cmd>let g:cocJump_previousFile=expand('%:p')<CR><cmd>execute "TabDrop normal! gf"<CR>
+nnoremap <silent> gf <cmd>let g:cocJump_previousFile=expand('%:p')<CR><cmd>execute "silent! TabDrop normal! gf"<CR>
 " nnoremap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| tabprevious \| endif<CR>
-nnoremap <silent> gF 
+nnoremap <silent> gF
   \
   \<cmd>let g:cocJump_previousFile=expand('%:p')<CR>
   \
-  \<cmd>execute "TabDrop normal! gf"<CR>
+  \<cmd>execute "silent! TabDrop normal! gf"<CR>
   \
   \<cmd>call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("if g:cocJump_previousFile != expand('%:p') \| tabprevious \| endif")})<CR>
  

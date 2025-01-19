@@ -1,4 +1,37 @@
 " #===================================================================================#
+" ctrl + PageUp/PageDown/End/Home in insert/cmd mode should behave like normal mode
+noremap! <C-PageUP> <Esc><C-PageUp>
+noremap! <C-PageDown> <Esc><C-PageDown>
+noremap! <C-Home> <Esc><C-Home>
+noremap! <C-End> <Esc><C-End>
+
+" command to open ftplugin file for current filetype
+function OpenFileTypeConfig()
+  let path = "$HOME/.vim/ftplugin/" . &filetype . ".vim"
+  if filereadable(expand(path))
+    execute "TabDrop tabnew " . expand(path)
+  else
+    EchomWarn "filetype " . &filetype . " config at " . expand(path) . " doesn't exist!"
+  endif
+endfunction
+command! OpenFtplug call OpenFileTypeConfig() 
+
+" disable visual lowercasing with u, change it to undo
+vnoremap u <nop>
+vnoremap u <Esc>u
+
+" nnoremap <C-j> :cn<CR>
+" nnoremap <c-k> :cp<CR>
+" set <Home>=[1~
+" set <End>=[4~
+" set <C-Home>=[1;5H
+" set <C-End>=[1;5F
+nnoremap <leader>cn :silent! TabDrop cn<CR>
+" nnoremap <kHome> <cmd>silent! TabDrop cp<CR>
+nnoremap <leader>cp :silent! TabDrop cp<CR>
+" nnoremap <End> <cmd>silent! TabDrop cn<CR>
+" nnoremap <kHome> <cmd>echom "asd"<CR>
+
 " large change warning for when accidental changes covers most of window s.t. it goes unnoticed
 let s:prev_yankreg = ''
 function! MiscFunc_checkForLargeChange()
@@ -55,19 +88,33 @@ set <A-k>=k
 set <A-j>=j
 set <A-h>=h
 set <A-l>=l
-noremap <A-k> <Esc>k
-noremap <A-j> <Esc>j
+noremap <A-k> <Esc>gk
+noremap <A-j> <Esc>gj
 noremap <A-h> <Esc>h
 noremap <A-l> <Esc>l
-inoremap <A-k> <Esc>k
-inoremap <A-j> <Esc>j
+inoremap <A-k> <Esc>gk
+inoremap <A-j> <Esc>gj
 inoremap <A-h> <Esc>h
 inoremap <A-l> <Esc>l
+vnoremap <A-h> <Esc>`<h
+vnoremap <A-j> <Esc>`>gj
+vnoremap <A-k> <Esc>`<gk
+vnoremap <A-l> <Esc>`>l
 cnoremap <expr> <A-k> getcmdtype()=='/' \|\| getcmdtype()=='?' ? "<CR>``" : "<CR>"
 cnoremap <expr> <A-j> getcmdtype()=='/' \|\| getcmdtype()=='?' ? "<CR>``" : "<CR>"
 cnoremap <expr> <A-h> getcmdtype()=='/' \|\| getcmdtype()=='?' ? "<CR>``" : "<CR>"
 cnoremap <expr> <A-l> getcmdtype()=='/' \|\| getcmdtype()=='?' ? "<CR>``" : "<CR>"
+" for preventing Surround from interpreting escaping motion as a special character
+" XXX not working
+" onoremap <A-k> <Esc>k
+" onoremap <A-j> <Esc>j
+" onoremap <A-h> <Esc>h
+" onoremap <A-l> <Esc>l
 
+" <c-v> visual mode blocked by terminal
+set <A-v>=v
+nnoremap <A-v> <C-v>
+vnoremap <A-v> <C-v>
 
 " mouse click for displaying synID
 nnoremap <leftmouse> <leftmouse>:echom "synID(line=" . line('.') . ", col=" . col('.') .  ") = " . synID(line('.'), col('.'), 0)<CR>
@@ -124,7 +171,8 @@ function! OpenHelpFile()
     return
   endtry
   " execute "tab help " . l:text
-  execute "tag /" . l:text
+  execute "tag /\\V" . l:text
+  execute "normal! \<C-T>"
 endfunction
 nnoremap <leader>? :call OpenHelpFile()<CR>
 " put this in ~/.vim/ftplugin/help.vim as filetype plugin (*ftplugin*) for help buffer
@@ -153,11 +201,13 @@ endfunction
 "     \ execute l:start_line . ",$s/$/;/"
 command! -nargs=1 -complete=file GenHeader call GenHeader_function(<f-args>)
 
-" space based mapping
+" Space based mapping
 nnoremap <space><space> i<space><Esc>la<space><Esc>h
 vnoremap <space><space> <esc>`<i<space><Esc>`>la<space><Esc>`<lv`>l
 nnoremap <space>d f<space>xF<space>x
 vnoremap <space>d <esc>`>f<space>x`<F<space>x`<hv`>h
+" Enter based mapping
+vnoremap <CR><CR> c<CR><CR><Up><Esc>p==
 
 
 " search pattern pre-fill
@@ -252,13 +302,27 @@ function! ReplaceWithInput() abort
     return
   endif
   let l:replacement_text = escape(l:replacement_text, '\/.^$*[]~')
+  let s:replacement_nr = 0
+  function! s:returnReplacementText(text)
+    let s:replacement_nr += 1
+    return a:text
+  endfunction
   " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
   let [l:pattern_firstHalf, l:pattern_secondHalf] = RangedPattern_startFromCursor_WrapAround(@h)
-  execute "%s/" . l:pattern_firstHalf ."/" . l:replacement_text . "/ce"
+  redir => l:replacement_nr_max_str
+  execute "%s/" . l:pattern_firstHalf ."/" . l:replacement_text . "/ne"
+  redir End
+  let l:replacement_nr_max = str2nr(matchstr(l:replacement_nr_max_str, '\d\+'))
+  echom "replacement number max: " . l:replacement_nr_max
+  execute "%s/" . l:pattern_firstHalf ."/\\=s:returnReplacementText(" . shellescape(l:replacement_text) . ")/ce"
+  echom "replacement number max: " . l:replacement_nr_max
+  if s:replacement_nr != l:replacement_nr_max
+    return
+  endif
   echo 'wrapped around EOF'
   execute "%s/" . l:pattern_secondHalf ."/" . l:replacement_text . "/ce"
 endfunction
-vnoremap <silent> <C-r> "hy:<C-u>silent call ReplaceWithinput()<CR>
+vnoremap <silent> <C-r> "hy:<C-u>silent call ReplaceWithInput()<CR>
 " if cursor on top of match highlights, enter replacing commands
 " nnoremap <expr> <C-r> IsOnMatch() ? ':call search(@/, "cb")<CR>v//e<CR>"hy:<C-u>call ReplaceWithInput()<CR>' : '<C-r>'
 " matching replacement with @/ stored inside @h instead of copy the first match literally as the pattern
@@ -458,10 +522,16 @@ nnoremap <silent> <Plug>VerityHighlightNext_N :call VerityHighlight_N(1)<CR>
 vnoremap <silent> <Plug>VerityHighlightNext_V <Esc>:call VerityHighlight_V(1)<CR>
 nnoremap <silent> <Plug>VerityHighlightPrev_N :call VerityHighlight_N(-1)<CR>
 vnoremap <silent> <Plug>VerityHighlightPrev_V <Esc>:call VerityHighlight_V(-1)<CR>
-nmap <silent> <C-n> <Plug>VerityHighlightNext_N
-vmap <silent> <C-n> <Plug>VerityHighlightNext_V
-nmap <silent> <C-p> <Plug>VerityHighlightPrev_N
-vmap <silent> <C-p> <Plug>VerityHighlightPrev_V
+" nmap <silent> <C-n> <Plug>VerityHighlightNext_N
+" vmap <silent> <C-n> <Plug>VerityHighlightNext_V
+" nmap <silent> <C-p> <Plug>VerityHighlightPrev_N
+" vmap <silent> <C-p> <Plug>VerityHighlightPrev_V
+" fk me
+nnoremap <C-n> ngn
+vnoremap <C-n> <Esc>ngn
+nnoremap <C-p> NgN
+vnoremap <C-p> <Esc>NgN
+
 
 " visual to the end don't enclude newline
 vnoremap _ $
@@ -512,8 +582,12 @@ vnoremap iW iw
 " #############################
 " movement
 " tag jump
-nnoremap <Tab> <cmd>TagbarJumpNext<CR>
-nnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>
+" nnoremap <Tab> <cmd>TagbarJumpNext<CR>
+" nnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>
+nmap <Tab> ]]
+nmap <S-Tab> [[
+vmap <Tab> ]]
+vmap <S-Tab> [[
 
 " remap capital HJKL to prevent accidental trigger
 noremap <leader>j J
@@ -548,15 +622,25 @@ xnoremap <nowait> K k
 " endfunction
 
 let g:smartJump_half_lastJK = 0
-noremap J 7j<cmd>let g:smartJump_half_lastJK=1<CR>
-noremap K 7k<cmd>let g:smartJump_half_lastJK=1<CR>
-noremap <expr> j g:smartJump_half_lastJK <= 0 ? "j" : "3j<cmd>let g:smartJump_half_lastJK-=1<CR>"
-noremap <expr> k g:smartJump_half_lastJK <= 0 ? "k" : "3k<cmd>let g:smartJump_half_lastJK-=1<CR>"
+noremap J 7gj<cmd>let g:smartJump_half_lastJK=1<CR>
+noremap K 7gk<cmd>let g:smartJump_half_lastJK=1<CR>
+noremap <expr> j g:smartJump_half_lastJK <= 0 ? "gj" : "3gj<cmd>let g:smartJump_half_lastJK-=1<CR>"
+noremap <expr> k g:smartJump_half_lastJK <= 0 ? "gk" : "3gk<cmd>let g:smartJump_half_lastJK-=1<CR>"
 let g:smartJump_half_lastHL = 0 
 noremap H 10h<cmd>let g:smartJump_half_lastHL=1<CR>
 noremap L 10l<cmd>let g:smartJump_half_lastHL=1<CR>
 noremap <expr> h g:smartJump_half_lastHL <= 0 ? "h" : "5h<cmd>let g:smartJump_half_lastHL-=1<CR>"
 noremap <expr> l g:smartJump_half_lastHL <= 0 ? "l" : "5l<cmd>let g:smartJump_half_lastHL-=1<CR>"
+
+" noremap J 7j<cmd>let g:smartJump_half_lastJK=1<CR>call ReltimeTimer('Smartjump_j', 500)<CR>
+" noremap K 7k<cmd>let g:smartJump_half_lastJK=1<CR>call ReltimeTimer('Smartjump_k', 500)<CR>
+" noremap <expr> j ReltimeTimer('Smartjump_j', 500) || g:smartJump_half_lastJK <= 0 ? "j" : "3j<cmd>let g:smartJump_half_lastJK-=1<CR>"
+" noremap <expr> k ReltimeTimer('Smartjump_k', 500) || g:smartJump_half_lastJK <= 0 ? "k" : "3k<cmd>let g:smartJump_half_lastJK-=1<CR>"
+" let g:smartJump_half_lastHL = 0 
+" noremap H 10h<cmd>let g:smartJump_half_lastHL=1<CR>call ReltimeTimer('Smartjump_h', 500)<CR>
+" noremap L 10l<cmd>let g:smartJump_half_lastHL=1<CR>call ReltimeTimer('Smartjump_l', 500)<CR>
+" noremap <expr> h ReltimeTimer('Smartjump_h', 500) || g:smartJump_half_lastHL <= 0 ? "h" : "5h<cmd>let g:smartJump_half_lastHL-=1<CR>"
+" noremap <expr> l ReltimeTimer('Smartjump_l', 500) || g:smartJump_half_lastHL <= 0 ? "l" : "5l<cmd>let g:smartJump_half_lastHL-=1<CR>"
 
 " forward/backward one paragraph (separated by empty line)
 noremap <C-j> }
@@ -670,29 +754,79 @@ endfunction
 
 
     " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
+    " paste replacement should be pasted onto the block cursor (original P is paste on cursor)
     " visual mode paste should select the pasted content
     " first, fix cursor position after paste (default is - to the end if pasting no linebreak, to the begining of the next line if pasting linebreaks)
 
-    nnoremap <nowait> P "0p
-    " vnoremap <nowait> p "0p
-    vnoremap <nowait> P "0p
-    " nnoremap gp "0gp
-    nnoremap gP "0gp
-    " pls reserve mp for this
-    " vnoremap <nowait> gp  mp"0pv`po
-    vnoremap <nowait> gP  mp"0pv`po
+  " reserver mp (mark paste) for this
+  let b:PasteSelect_Visual_consecutivePaste = v:false
+  function! PasteSelect(reg, pasteMethod)
+    " let [_, curline, curcol, _] = getpos('.')
+    if getregtype(a:reg) ==# 'V'
+      execute 'normal! "' . a:reg . a:pasteMethod
+      call feedkeys('`[V`]')
+    elseif getregtype(a:reg)->match("\<c-v>") >= 0
+      execute 'normal! "' . a:reg . a:pasteMethod
+      call feedkeys("`[\<C-v>`]")
+    else
+      execute 'normal! "' . a:reg . a:pasteMethod
+      call feedkeys('`[v`]')
+    endif
+    undojoin
+    " let b:PasteSelect_Visual_lastVPasteRange = [[line("'["), col("'[")], [line("']"), col("']")]]
+    let cmdAvoiding_autocmd = "let b:PasteSelect_Visual_consecutivePaste = v:true"
+    call timer_start(1, {tid -> CMDFunc(cmdAvoiding_autocmd)})
+  endfunction
+  " function! CGTest()
+  "   autocmd! CursorMoved * ++once echom "!?"
+  " endfunction
+  " nnoremap <c-g> <cmd>call CGTest()<CR>
+  "       \ <cmd>echom 'a??'<CR>
+  autocmd! CursorMoved,ModeChanged * let b:PasteSelect_Visual_consecutivePaste = v:false
+  " autocmd! CursorMoved * let b:PasteSelect_Visual_consecutivePaste = v:true
+  function! PasteSelect_Visual(reg, pasteMethod, direction)
+  " direction v:true for backward, v:false for forward
+    if !exists('b:PasteSelect_Visual_consecutivePaste')
+      let b:PasteSelect_Visual_consecutivePaste = v:false
+    endif
+    echom "# " . b:PasteSelect_Visual_consecutivePaste
+    if b:PasteSelect_Visual_consecutivePaste
+      " exec "normal! \<Esc>"
+      call feedkeys("\<Esc>")
+      call cursor(a:direction ? [line("'["), col("'[")] : [line("']"), col("']")])
+      " a hack... there must be something not being resolved until the function ends
+      call timer_start(1, {tid -> PasteSelect(a:reg, a:pasteMethod)})
+    else
+      call PasteSelect(a:reg, a:pasteMethod)
+    endif
+  endfunction
 
-    " voremap d ""d
-    vnoremap D "0d
-    " nnoremap d ""d
-    nnoremap D "0d
-    nnoremap DD "0dd
-    " nnoremap dd "0dd
+  vnoremap Y y
+  nnoremap P <cmd>call PasteSelect('0', 'p')<CR>
+  nnoremap p <cmd>call PasteSelect('"', 'p')<CR>
+  vnoremap P <cmd>call PasteSelect_Visual('0', 'p', 0)<CR>
+  vnoremap p <cmd>call PasteSelect_Visual('"', 'p', 0)<CR>
+  " turn gp (default: past and move to the end), into paste prior to cursor (originally P)
+  " because original include/exclude motion can be replaced by alt-leave visual to either end (see <A-hjkl> mapping)
+  nnoremap gP <cmd>call PasteSelect('0', 'P')<CR>
+  nnoremap gp <cmd>call pasteSelect('"', 'P')<CR>
+  vnoremap gP <cmd>call PasteSelect_Visual('0', 'P', 1)<CR>
+  vnoremap gp <cmd>call PasteSelect_Visual('"', 'P', 1)<CR>
+  " unmap p
+  " unmap P
+
+  " voremap d ""d
+  vnoremap D "0d
+  " nnoremap d ""d
+  nnoremap D "0d
+  nnoremap DD "0dd
+  " nnoremap dd "0dd
+
 " endif
 " 6/28/2024, dunno why but the SystemCall check suddenly passed without X11, disabling it
-
 " custom host yank support
 let s:clipboard_export = '/mnt/c/clipboard.txt'  " change this path according to your mount point
+" let s:clipboard_import = '/mnt/c/clipboard.txt'  " change this path according to your mount point
 function! ExportClipboard(text)
   call writefile(split(a:text, '\(\n\|\n\r\)', 1), s:clipboard_export, 'b')
 endfunction
@@ -748,14 +882,14 @@ inoremap <M-O> <C-o>O<C-o>==
 " replace default arrow key to avoid escape sequence conflict (arrow keys will
 " be translated into Esc+... and triggering "insert mode add newline" defined
 " above)
-function! MiscMap_insertUp()
-  let [curline, curcol] = [line('.'), col('.')]
-  call cursor([l:curline-1, l:curcol])
-endfunction
-function! MiscMap_insertDown()
-  let [curline, curcol] = [line('.'), col('.')]
-  call cursor([l:curline+1, l:curcol])
-endfunction
+" function! MiscMap_insertUp()
+"   let [curline, curcol] = [line('.'), col('.')]
+"   call cursor([l:curline-1, l:curcol])
+" endfunction
+" function! MiscMap_insertDown()
+"   let [curline, curcol] = [line('.'), col('.')]
+"   call cursor([l:curline+1, l:curcol])
+" endfunction
 function! MiscMap_insertLeft()
   let [curline, curcol] = [line('.'), col('.')]
   if l:curcol <= 1 && l:curline > 1
@@ -773,8 +907,8 @@ function! MiscMap_insertRight()
     call cursor([l:curline, l:curcol+1])
   endif
 endfunction
-inoremap <nowait> <Up> <cmd>call MiscMap_insertUp()<CR>
-inoremap <nowait> <Down> <cmd>call MiscMap_insertDown()<CR>
+inoremap <nowait> <Up> <cmd>normal! gk<CR>
+inoremap <nowait> <Down> <cmd>normal! gj<CR>
 inoremap <nowait> <Left> <cmd>call MiscMap_insertLeft()<CR>
 inoremap <nowait> <Right> <cmd>call MiscMap_insertRight()<CR>
 " inoremap <expr> <nowait> <Up> col(".") == 1 ? "<Esc>ki" : "<Esc>ka"
@@ -783,10 +917,15 @@ inoremap <nowait> <Right> <cmd>call MiscMap_insertRight()<CR>
 " inoremap <expr> <nowait> <Right> col(".") == col("$") ? "<Esc>j0i" : (col(".") == 1 ? "<Esc>li" : "<Esc>la")
 
 " same in normal mode
-nnoremap <nowait> <Up> k
-nnoremap <nowait> <Down> j
+nnoremap <nowait> <Up> gk
+nnoremap <nowait> <Down> gj
 nnoremap <expr> <nowait> <Left> col(".") == 1 ? "k$" : "h"
 nnoremap <expr> <nowait> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == col("$") ? "j0" : "l"
+
+
+" XXX reserve <f3> to be an "do nothing" key for breaking up mappings/feedkeys()/:normal keys triggerring other mappings/keycode (only for non-nore mapping, event keycode won't be triggerred by noremap)
+" inoremap <F3> <nop>
+nnoremap <F3> <nop>
 
 " inoremap <expr> <C-L> IsCursorAtEnd() ? "<Cmd>echo 'true'<CR> " : "<Cmd>echo 'false'<CR>"
 " insert mode delete until word end
@@ -795,20 +934,23 @@ inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" 
 " inoremap <expr> <C-w> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
-imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
-imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
+" imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
+imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
+" imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
+imap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviWc" : "<Esc><F3>viWc"
+
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
 nmap <C-c> viwc
 nmap <C-x> viWc
 
-" increment/decrement alternatives
-nnoremap gi <C-a>
-nnoremap gx <C-x>
-
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
 nmap <C-D> viWd
+
+" increment/decrement alternatives
+nnoremap gi <C-a>
+nnoremap gx <C-x>
 
 " insert mode indent
 inoremap <C-\> <C-T>

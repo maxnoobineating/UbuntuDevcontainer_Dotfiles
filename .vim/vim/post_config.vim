@@ -20,11 +20,15 @@ call SetGlobalTimeoutSnapShot(v:false, 100)
 highlight SignColumn ctermbg=0
 highlight CocMenuSel ctermfg=152 ctermbg=132
 highlight CocFloating ctermfg=96 ctermbg=0
-highlight Comment term=italic cterm=italic ctermfg=181 guifg=#80a0ff
+highlight Comment term=italic cterm=italic ctermfg=181 guifg=#dfafaf
 highlight Cursor cterm=reverse ctermbg=12
 highlight Visual term=reverse cterm=reverse ctermfg=132 ctermbg=123 guibg=DarkGrey
 highlight VertSplit ctermfg=97 ctermbg=0 gui=reverse
 highlight SpecialKey term=bold cterm=bold ctermfg=11 ctermbg=8 guifg=Cyan
+" popups
+highlight Pmenu term=italic cterm=italic ctermfg=229 ctermbg=237 guifg=#dfafaf guibg=#54285c
+highlight PmenuSbar term=italic cterm=italic ctermfg=229 ctermbg=240 guifg=#dfafaf guibg=#54285c
+highlight PmenuThumb term=italic cterm=italic ctermfg=229 ctermbg=229 guifg=#dfafaf guibg=#54285c
 
 " tabline hl group w/ airline tabline setting as well
 highlight TabLineSel  term=underline,reverse cterm=underline,reverse ctermfg=131 ctermbg=53 gui=bold

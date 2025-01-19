@@ -1,3 +1,6 @@
+" line wrapping
+set wrap linebreak breakindent
+
 " global variables
 let g:env_shellscript_path = fnamemodify("~/.vim/vim", ':p') . 'shellscript/'
 if !isdirectory(g:env_shellscript_path)
@@ -214,11 +217,14 @@ augroup filetype_indent
   autocmd BufEnter *.c setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter *.cpp setlocal expandtab tabstop=2 shiftwidth=2
   autocmd BufEnter *.h setlocal expandtab tabstop=2 shiftwidth=2
-  " autocmd BufEnter * execute 'IndentLinesReset'
+  autocmd BufEnter * if !IsSpecialBuffer(&buftype) && !IsSpecialFileType(&filetype)
+        \ | execute 'IndentLinesReset'
+        \ | endif
 augroup END
 
 " Show “invisible” characters
-set lcs=tab:▸\ ,trail:·,eol:¬,nbsp:_
+" set lcs=tab:▸\ ,trail:·,eol:¬,nbsp:_
+set lcs=tab:\ \ 
 set list
 " Highlight searches
 set hlsearch
@@ -288,5 +294,3 @@ if &term =~ '^xterm'
   " leave vim
   autocmd VimLeave * silent !echo -ne "\e[5 q"
 endif
-
-

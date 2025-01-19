@@ -13,7 +13,10 @@
 	pwd = "rev-parse --show-toplevel"
 [core]
 	excludesfile = $HOME/.gitignore_global
+	compression = 1
 [gpg]
 	program = gpg
 [commit]
 	gpgsign = false
+[http]
+	postBuffer = 1048576000
