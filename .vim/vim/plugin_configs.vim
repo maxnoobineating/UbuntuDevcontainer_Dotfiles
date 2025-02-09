@@ -113,13 +113,28 @@ call plug#begin('~/.vim/plugged')
     " custom text object
     Plug 'kana/vim-textobj-user'
 
+    " html/css utils
+    Plug 'mattn/emmet-vim'
+
+    " javascript
+    Plug 'pangloss/vim-javascript'
+
 call plug#end()
 
 
 " ############################# "
 " Plugin mapping & configuration:
-" textobj
 
+" emmet vim html/css
+let g:user_emmet_install_global = 0
+let g:user_emmet_complete_tag = 0
+" imap <C-f> should be reserved for filetype specific leader key
+let g:user_emmet_leader_key='<C-f>'
+" vmap <C-f>u <Plug>(emmet-update-tag)
+autocmd FileType html,css EmmetInstall
+
+
+" textobj
 
 " vim-go
 let g:go_diagnostics_level = 0
@@ -161,6 +176,8 @@ augroup StartifyAug
   " autocmd! FileType *\(startify\)\@<! set notimeout
   call SetFiletypeTimeout('startify', v:true, 100)
 augroup END
+" auto-pairs
+let g:AutoPairsMapCR = 0
 
 " startify session save
 nnoremap <C-w><C-s> :SSave<CR>
@@ -212,9 +229,9 @@ let g:python_highlight_all = 1
 " 1 for enabling all linters
 let g:ale_sign_error = '✗'
 let g:ale_sign_warning = '⚠️'
-let g:ale_virtualtext_cursor = 1
+let g:ale_virtualtext_cursor = 0
 let g:ale_linters_explicit = 0
-let g:ale_linters = {'javascript': [],
+let g:ale_linters = {
             \ 'python': ['flake8'],
             \ 'rust': [],
             \ 'go': ['golangci-lint'],
@@ -222,12 +239,14 @@ let g:ale_linters = {'javascript': [],
             \ 'sh': ['shellcheck'],
             \ 'tex': ['chktex'],
             \ 'c': ['gcc', 'clang'],
-            \ 'cpp': ['g++', 'clang++']}
+            \ 'cpp': ['g++', 'clang++'],
+            \ 'javascript': ['eslint']}
 let g:ale_fixers = {'bash': ['shfmt'],
       \ 'sh': ['shfmt'],
       \ 'python': ['autoflake'],
       \ 'c': ['clang-format'],
-      \ 'cpp': ['clang-format']}
+      \ 'cpp': ['clang-format'],
+      \ 'javascript': ['prettier', 'eslint']}
 let g:ale_sign_error = '>>'
 let g:ale_sign_warning = '--'
 let g:ale_lint_on_text_changed = 'always'
@@ -282,12 +301,13 @@ colorscheme solarized
 let s:terminal_italic=1
 
 " Vim-airline-themes config
-let g:airline_theme='alduin'
+let g:airline_theme='my_alduin'
 " let g:airline_solarized_bg='light'
 " Enable tabline
 " let g:airline#extensions#tabline#enabled = 1
 " let g:airline#extensions#tabline#show_buffers = 1
 " let g:airline_powerline_fonts = 1
+" let g:airline#extensions#tabline#fnamemod = ':t'
 
 " airline + tagbar integration
 let g:airline#extensions#tagbar#enabled = 1
@@ -360,7 +380,12 @@ let g:coc_global_extensions = [
 \ 'coc-json',
 \ 'coc-clangd',
 \ 'coc-snippets',
-\ 'coc-go'
+\ 'coc-go',
+\ 'coc-css',
+\ 'coc-html',
+\ 'coc-snippets',
+\ 'coc-tsserver',
+\ 'coc-emoji'
 \ ]
 let g:coc_start_at_startup = 1
 " set timeout timeoutlen=600 ttimeoutlen=100
@@ -448,52 +473,6 @@ function! ShowDocumentation()
     call feedkeys('K', 'in')
   endif
 endfunction
-" Tab Completion binding
-" https://github.com/neoclide/coc.nvim/wiki/Completion-with-sources#use-tab-or-custom-key-for-trigger-completion
-" Enter confirm with other wise formatted <CR>
-" inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
-inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#_select_confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-" tab S-tab navigate
-" inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
-" inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
-" tab triggering completion
-" use <tab> to trigger completion and navigate to the next complete item
-function! CheckBackspace() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-function! ScrollAndNext()
-  call coc#pum#next(1)
-  call coc#pum#scroll(1)
-endfunction
-" inoremap <silent><expr> <Tab>
-"     \ coc#pum#visible() ?
-"         \ coc#pum#next(1) :
-"         \ (CheckBackspace() ?
-"             \ "\<Tab>" :
-"             \ coc#refresh())
-inoremap <silent><expr> <Plug>CocNextCompletionCustom
-    \ coc#pum#visible() ?
-        \ coc#pum#next(1) :
-        \ (CheckBackspace() ?
-            \ "\<Tab>" :
-            \ coc#refresh())
-" crude auto indent
-" imap <expr> <Tab> (col('.') == 1) && (getline(line('.')-1) != '') ? '<C-w><CR><C-o>:if col(".") == 1 \| call feedkeys("\t", "n") \| endif<CR>' : '<Plug>CocNextCompletionCustom'
-function! TaborCompletion()
-  return (col('.') == 1) ? repeat("\<space>", ((line('.') <= 1 || indent(line('.') - 1) <= 0) ? shiftwidth() : indent(line('.') - 1))) : "\<Plug>CocNextCompletionCustom"
-endfunction
-imap <silent><expr> <Tab> TaborCompletion()
-
-
-function! ScrollAndPrev()
-  call coc#pum#prev(1)
-  call coc#pum#scroll(0)
-endfunction
-inoremap <silent><expr> <S-TAB>
-    \ coc#pum#visible() ?
-        \ coc#pum#prev(1) :
-        \ "\<C-h>"
 
 " Vim Surrounds
 " let b:surround_{char2nr('.')} = "<.>\r</.>"

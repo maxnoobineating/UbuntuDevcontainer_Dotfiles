@@ -1,5 +1,23 @@
 "=============================================================================="
 " Functions
+" return list of file names ordered from oldest to latest under given dir, matching given wildcard
+function! GetFilesByAccessTime(path, pattern)
+    " Construct the shell command
+    let l:cmd = 'find '. a:path
+          \ . ' -maxdepth 1 -type f -name ' . shellescape(a:pattern)
+          \ . ' -printf "%A@ %p\n" | sort -n | cut -d" " -f2'
+    " Execute the command and capture the output
+    let l:file_list = systemlist(l:cmd)
+    return l:file_list
+endfunction
+
+
+" comparing if given buffer is the same file as <path>
+function BufnrPathEq(bufnr, path)
+  return a:bufnr->bufname()->fnamemodify(':h')->fnamemodify(':p')
+        \ == a:path->fnamemodify(':p')
+endfunction
+
 " range compare
 " function! RangeComp(lrange, rrange)
 "   " return -2 for [  ] < >, -1 for [ < ] > , 0 for {  }, 1 for < [ > ], 2 for < > [  ]
@@ -65,6 +83,15 @@ function! CMDFunc(cmd)
     return v:false
   endtry
   return v:true
+endfunction
+function! CMDFuncRedir(cmd)
+  let msg = ''
+  redir => msg
+    silent! if !CMDFunc(a:cmd)
+      let msg = ''
+    endif
+  redir END
+  return msg
 endfunction
 function! CMDFuncref(cmd)
   return Curry(function('CMDFunc'), a:cmd)
@@ -189,11 +216,11 @@ endfunction
 function! RangedPattern(startpos, endpos, pattern)
   let [l:startLine, l:startCol] = a:startpos
   let [l:endLine, l:endCol] = a:endpos
-  let return_pattern = '\(\%>' . l:startLine . 'l\|\(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\(\%<' . l:endLine . 'l\|\(\%<' . (l:endCol+1) . 'c\&\%' . (l:endLine) . 'l\)\)'
+  let return_pattern = '\%(\%>' . l:startLine . 'l\|\%(\%>' . (l:startCol-1) . 'c\&\%' . (l:startLine) . 'l\)\)' . a:pattern . '\%(\%<' . l:endLine . 'l\|\%(\%<' . (l:endCol+1) . 'c\&\%' . (l:endLine) . 'l\)\)'
   " echom l:return_pattern
   return l:return_pattern
 endfunction
-
+" #40ffff
 function! RangedPattern_startFromCursor_WrapAround(pattern)
   let [l:cusline, l:cuscol] = [line('.'), col('.')]
   let l:firstHalf_start = [l:cusline, l:cuscol]

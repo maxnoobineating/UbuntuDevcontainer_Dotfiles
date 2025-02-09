@@ -1,4 +1,14 @@
 " #===================================================================================#
+" dunno why but <C-i> jump list undo is remapped to tag jump...
+nnoremap <C-i> <C-I>
+
+" ; . (originally ,) motion for selection
+" noremap . ,
+
+" wait, why does this work now? (probably because I've remapped <alt-hjkl> keycode)
+nmap  <Plug>CommentaryLine<CR>
+vmap  <Plug>Commentary<CR>
+
 " ctrl + PageUp/PageDown/End/Home in insert/cmd mode should behave like normal mode
 noremap! <C-PageUP> <Esc><C-PageUp>
 noremap! <C-PageDown> <Esc><C-PageDown>
@@ -6,7 +16,7 @@ noremap! <C-Home> <Esc><C-Home>
 noremap! <C-End> <Esc><C-End>
 
 " command to open ftplugin file for current filetype
-function OpenFileTypeConfig()
+function! OpenFileTypeConfig()
   let path = "$HOME/.vim/ftplugin/" . &filetype . ".vim"
   if filereadable(expand(path))
     execute "TabDrop tabnew " . expand(path)
@@ -37,7 +47,7 @@ let s:prev_yankreg = ''
 function! MiscFunc_checkForLargeChange()
   let l:change_tolerance = getwininfo(win_getid())[0]['height'] * 0.40
   if (s:prev_yankreg != @" && count(@", "\n") >= l:change_tolerance) || abs(line("'[") - line("']")) >= l:change_tolerance
-    echohl WarningMsg | echo "Warning! major changes to the buffer" | echohl None
+    echohl WarningMsg | echo "\rWarning! major changes to the buffer" | echohl None
   endif
   let s:prev_yankreg = @"
 endfunction
@@ -55,6 +65,7 @@ if maparg('q', 'n')==''
   nnoremap <nowait> q <cmd>echo "q recording remapped to r"<CR>
 endif
 nnoremap r q
+vnoremap r q
 
 " cmdline window buffer mappings
 function! ConfigureCmdwinBuffer()
@@ -117,7 +128,25 @@ nnoremap <A-v> <C-v>
 vnoremap <A-v> <C-v>
 
 " mouse click for displaying synID
-nnoremap <leftmouse> <leftmouse>:echom "synID(line=" . line('.') . ", col=" . col('.') .  ") = " . synID(line('.'), col('.'), 0)<CR>
+let g:Misc_mappings_echoSynFunc = 'synIDattr(v:val, "name")'
+" let g:Misc_mappings_echoSynFunc = { ind, val -> synIDattr(val, "name") }
+function! EchoSynIDNameStack()
+  let stackIDs = synstack(line('.'), col('.'))
+  let stackIDs_mapped = stackIDs->copy()->map(g:Misc_mappings_echoSynFunc)
+  let stackIDsTrans = stackIDs->copy()->map('synIDtrans(v:val)')
+  let stackIDsTrans_mapped = stackIDsTrans->copy()->map(g:Misc_mappings_echoSynFunc)
+  let stackNames = []
+  for ind in range(len(stackIDs))
+    if stackIDs[ind] != stackIDsTrans[ind]
+      let stackNames += [stackIDs_mapped[ind].'>'.stackIDsTrans_mapped[ind]]
+    else
+      let stackNames += [stackIDs_mapped[ind]]
+    endif
+  endfor
+  echom "synstack(line=" . line('.') . ", col=" . col('.') .  ")=[ " . stackNames->join(', ') . " ]"
+endfunction
+" nnoremap <leftmouse> <leftmouse>:echom "synstack(line=" . line('.') . ", col=" . col('.') .  ") = " . synstack(line('.'), col('.'), 0)->map('synIDtrans(v:val)')<CR>
+nnoremap <leftmouse> <leftmouse><cmd>call EchoSynIDNameStack()<CR>
 
 " the holy ctrl-s
 nnoremap <C-s> :wa<CR>
@@ -135,19 +164,37 @@ function! OpenManpage()
   if(l:text == "")
     return
   endif
-  let l:manpage_msg = ''
-  " let old_eventignore = &eventignore
-  " let &eventignore.=',User ALEWantResults'
-  redir => l:manpage_msg
-    silent! execute "TabDrop Man " . l:text
-  redir END
-  " let &eventignore = l:old_eventignore
-  " return cursor to beginning for later messaage to write properly
-  " echom l:manpage_msg
-  " XXX below is due to IndentLinesReset autocmd...
-  " workaround indentline exclude not working properly
-  " call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("call feedkeys(\":IndentLinesDisable\\<CR>\")") })
-  " autocmd! CursorMoved,CursorHold * ++once call feedkeys(":IndentLinesDisable\<CR>")
+  let existence = systemlist("/bin/man -w " . l:text . " 2>/dev/null 1>/dev/null || echo $?")
+  " echom "existence: " . string(existence)
+  if  existence->len() > 0 && existence[0] == '16'
+    echom "alternative " . l:text . " --help generated"
+    if system(l:text . " --help 2>/dev/null 1>/dev/null || echo $?") == ''
+      " execute "tab terminal sh -c " . shellescape(l:text . " --help | eval $MANPAGER")
+      " use the special behaviour with vim terminal cat, it will bring the file up like a normal buffer
+      let temp_helpfile = systemlist("man -w " . l:text)[0]
+      execute "tab terminal cat " . l:temp_helpfile
+      set filetype=man
+      redraw!
+      call timer_start(10, {_ -> CMDFunc("call cursor([1, 1])")})
+    else
+      EchomWarn "No '" . l:text . " --help' command found"
+    endif
+  else
+      " default manpage doesn't exist for the keyword
+    let l:manpage_msg = ''
+    " let old_eventignore = &eventignore
+    " let &eventignore.=',User ALEWantResults'
+    redir => l:manpage_msg
+      silent! execute "TabDrop Man " . l:text
+    redir END
+    " let &eventignore = l:old_eventignore
+    " return cursor to beginning for later messaage to write properly
+    " echom l:manpage_msg
+    " XXX below is due to IndentLinesReset autocmd...
+    " workaround indentline exclude not working properly
+    " call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("call feedkeys(\":IndentLinesDisable\\<CR>\")") })
+    " autocmd! CursorMoved,CursorHold * ++once call feedkeys(":IndentLinesDisable\<CR>")
+  endif
 endfunction
 nnoremap <leader>! :call OpenManpage()<CR>
 
@@ -165,14 +212,31 @@ function! OpenHelpFile()
     return
   endif
   try
-    silent call TabDropCMD("help " . l:text)
+    if l:text[0] == '/'
+      let pattern = l:text[1:]
+      silent! call TabDropCMD("helpgrep \\v\\c" . pattern)
+    else
+      let pattern = "\\V\\c*\\.\\*" . l:text . "\\.\\**"
+      silent! call TabDropCMD("helpgrep ". pattern)
+    endif
+    let fullqflist = getqflist()
+    if fullqflist->len() <= 0
+      echo "\rNo help page found for " . l:text
+      return
+    endif
+    " let newqflist = fullqflist->filter('v:val.bufnr->bufname()->fnamemodify(":h") == g:helpPage_builtinqflist->map("v:val.bufnr")') + g:helpPage_builtinqflist
+    let newqflist = fullqflist->copy()->filter({_, val -> BufnrPathEq(val.bufnr, $VIMRUNTIME . "/doc")})
+          \ + fullqflist->copy()->filter({_, val -> !BufnrPathEq(val.bufnr, $VIMRUNTIME . "/doc")})
+    silent! call setqflist(newqflist, 'r')
+    silent! crewind
   catch
-    echo "\rNo help page found for " . l:text
+    echo "\rNo help page found for " . l:text . "\nError: " . v:errmsg
     return
   endtry
+  " call timer_start(10, {_ -> CMDFunc("tag /\\c" . pattern)})
   " execute "tab help " . l:text
-  execute "tag /\\V" . l:text
-  execute "normal! \<C-T>"
+  " let oldpos = getpos('.')
+  " call cursor(oldpos)
 endfunction
 nnoremap <leader>? :call OpenHelpFile()<CR>
 " put this in ~/.vim/ftplugin/help.vim as filetype plugin (*ftplugin*) for help buffer
@@ -200,14 +264,6 @@ endfunction
 "     \ call StripWhiteSpace() \|
 "     \ execute l:start_line . ",$s/$/;/"
 command! -nargs=1 -complete=file GenHeader call GenHeader_function(<f-args>)
-
-" Space based mapping
-nnoremap <space><space> i<space><Esc>la<space><Esc>h
-vnoremap <space><space> <esc>`<i<space><Esc>`>la<space><Esc>`<lv`>l
-nnoremap <space>d f<space>xF<space>x
-vnoremap <space>d <esc>`>f<space>x`<F<space>x`<hv`>h
-" Enter based mapping
-vnoremap <CR><CR> c<CR><CR><Up><Esc>p==
 
 
 " search pattern pre-fill
@@ -285,7 +341,7 @@ nnoremap <leader>ul U
 nnoremap U <C-r>
 
 " selection replacement
-function! ReplaceWithInput() abort
+function! ReplaceWithInput()
   " let choice = confirm("Replacing highlighted text?", "&Yes\n&No\n&Quit", 1)
   " if choice != 1
   "     return 0
@@ -301,26 +357,43 @@ function! ReplaceWithInput() abort
   if v:statusmsg != v:true " no valid input is entered
     return
   endif
-  let l:replacement_text = escape(l:replacement_text, '\/.^$*[]~')
+  " let l:replacement_text = escape(l:replacement_text, '\/.^$*[]~')
   let s:replacement_nr = 0
-  function! s:returnReplacementText(text)
+  let s:lastEdit_cursorpos = []
+  function! s:replacementReturn(text)
+    " echom "#text=" . shellescape(a:text)
     let s:replacement_nr += 1
-    return a:text
+    let s:lastEdit_cursorpos = getcurpos('.')
+    let ret_text = a:text->copy()
+    let cpgroup_ind = ret_text->match('\\\d')
+    let cpgroup_matchStart = 0
+    while cpgroup_ind >= 0
+      let cpgroup_nr =  ret_text[cpgroup_ind + 1]->str2nr()
+      let cpgroup_text = submatch(cpgroup_nr)
+      " let cpgroup_text = cpgroup_text->substitute('\\\d', '\="\\".submatch(0)', 'g')
+      let ret_text = (cpgroup_ind > 0 ? ret_text[:cpgroup_ind-1]:'') . cpgroup_text . ret_text[cpgroup_ind+2:]
+      " echom "#[".cpgroup_ind."="  . shellescape(cpgroup_text) . "]ret_text=" . shellescape(ret_text)
+      " to avoid recursively submatch capture groups that contains \\\d
+      let cpgroup_matchStart = cpgroup_ind + cpgroup_text->strlen()
+      let cpgroup_ind = ret_text->match('\\\d', cpgroup_matchStart)
+    endwhile
+    return ret_text
   endfunction
   " cursor to end + start to cursor - faulty, cuz the first highlight will most certainly be skipped
   let [l:pattern_firstHalf, l:pattern_secondHalf] = RangedPattern_startFromCursor_WrapAround(@h)
+  let l:replacement_nr_max_str = ''
   redir => l:replacement_nr_max_str
-  execute "%s/" . l:pattern_firstHalf ."/" . l:replacement_text . "/ne"
+    execute "%s/" . l:pattern_firstHalf ."//ne"
   redir End
   let l:replacement_nr_max = str2nr(matchstr(l:replacement_nr_max_str, '\d\+'))
-  echom "replacement number max: " . l:replacement_nr_max
-  execute "%s/" . l:pattern_firstHalf ."/\\=s:returnReplacementText(" . shellescape(l:replacement_text) . ")/ce"
-  echom "replacement number max: " . l:replacement_nr_max
-  if s:replacement_nr != l:replacement_nr_max
-    return
+  " echom "replacement number max: " . l:replacement_nr_max
+  execute "%s/" . l:pattern_firstHalf . "/\\=s:replacementReturn(" . shellescape(l:replacement_text) . ")/ce"
+  " echom "replacement number max: " . l:replacement_nr_max
+  if s:replacement_nr == l:replacement_nr_max
+    echo 'wrapped around EOF'
+    execute "%s/" . l:pattern_secondHalf . "/\\=s:replacementReturn(" . shellescape(l:replacement_text) . ")/ce"
   endif
-  echo 'wrapped around EOF'
-  execute "%s/" . l:pattern_secondHalf ."/" . l:replacement_text . "/ce"
+  call cursor(s:lastEdit_cursorpos[1:])
 endfunction
 vnoremap <silent> <C-r> "hy:<C-u>silent call ReplaceWithInput()<CR>
 " if cursor on top of match highlights, enter replacing commands
@@ -545,7 +618,7 @@ vnoremap H <Esc>`<v`>holo
 
 " C-u C-r in insert mode for undo/redo
 inoremap <C-u> <C-o>u
-inoremap <C-r> <C-o><C-r>
+" inoremap <C-r> <C-o><C-r>
 
 " change 'w' word motion behaviour to excludes '_'
 function! CustomWordMotion(cmd)
@@ -556,38 +629,62 @@ function! CustomWordMotion(cmd)
 endfunction
 
 nnoremap w :call CustomWordMotion('w')<CR>
-nnoremap daw :call CustomWordMotion('daw')<CR>
-nnoremap diw :call CustomWordMotion('diw')<CR>
+" nnoremap daw :call CustomWordMotion('daw')<CR>
+" nnoremap diw :call CustomWordMotion('diw')<CR>
 " use visual mode to change word is because command will exit insert mode
 " recursively linked to aw/iw below
-nmap caw vawc
-nmap ciw viwc
-nmap cw viwc
-nmap daw vawd
-nmap diw viwd
-nmap dw viwd
+" nmap caw vawc
+" nmap ciw viwc
+" nmap cw viwc
+" nmap daw vawd
+" nmap diw viwd
+" nmap dw viwd
 vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
 vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
 " 'W' inplace of the original 'w' (original 'W' is everything but whitespace, quite useless)
-nnoremap W w
-nnoremap daW daw
-nnoremap diW diw
-nnoremap dW dw
-nnoremap caW caw
-nnoremap ciW ciw
-nnoremap cW viwc
-vnoremap aW aw
-vnoremap iW iw
+" nnoremap W w
+" nnoremap daW daw
+" nnoremap diW diw
+" nnoremap dW dw
+" nnoremap caW caw
+" nnoremap ciW ciw
+" nnoremap cW viwc
+" vnoremap aW aw
+" vnoremap iW iw
+
+" inoremap <expr> <C-L> IsCursorAtEnd() ? "<Cmd>echo 'true'<CR> " : "<Cmd>echo 'false'<CR>"
+" insert mode delete until word end
+inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" : "<Esc>lce"
+" insert mode delete until word begining (excludes current cursor) redundant
+" inoremap <expr> <C-w> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
+" insert mode delete current word
+" inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
+" imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
+imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
+" imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
+imap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviWc" : "<Esc><F3>viWc"
+
+" normal mode change current word
+" nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
+nmap <C-c> viwc
+nmap <C-x> viWc
+
+" normal mode delete current word
+" nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
+nmap <C-D> viWd
 
 " #############################
 " movement
 " tag jump
-" nnoremap <Tab> <cmd>TagbarJumpNext<CR>
-" nnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>
-nmap <Tab> ]]
-nmap <S-Tab> [[
-vmap <Tab> ]]
-vmap <S-Tab> [[
+nnoremap <Tab> <cmd>TagbarJumpNext<CR>
+nnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>
+vnoremap <Tab> <cmd>TagbarJumpNext<CR>mjgv`j
+vnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>mjgv`j
+
+" nmap <Tab> ]]
+" nmap <S-Tab> [[
+" vmap <Tab> ]]
+" vmap <S-Tab> [[
 
 " remap capital HJKL to prevent accidental trigger
 noremap <leader>j J
@@ -622,10 +719,11 @@ xnoremap <nowait> K k
 " endfunction
 
 let g:smartJump_half_lastJK = 0
-noremap J 7gj<cmd>let g:smartJump_half_lastJK=1<CR>
-noremap K 7gk<cmd>let g:smartJump_half_lastJK=1<CR>
-noremap <expr> j g:smartJump_half_lastJK <= 0 ? "gj" : "3gj<cmd>let g:smartJump_half_lastJK-=1<CR>"
-noremap <expr> k g:smartJump_half_lastJK <= 0 ? "gk" : "3gk<cmd>let g:smartJump_half_lastJK-=1<CR>"
+let g:smartJump_intervals = [1, 2, 4, 7]
+noremap <expr> J "<cmd>let g:smartJump_half_lastJK=2<CR>" . g:smartJump_intervals[3] . "gj"
+noremap <expr> K "<cmd>let g:smartJump_half_lastJK=2<CR>" . g:smartJump_intervals[3] . "gk"
+noremap <expr> j g:smartJump_half_lastJK <= 0 ? "gj" : "<cmd>let g:smartJump_half_lastJK-=1<CR>". g:smartJump_intervals[g:smartJump_half_lastJK] . "gj"
+noremap <expr> k g:smartJump_half_lastJK <= 0 ? "gk" : "<cmd>let g:smartJump_half_lastJK-=1<CR>". g:smartJump_intervals[g:smartJump_half_lastJK] . "gk"
 let g:smartJump_half_lastHL = 0 
 noremap H 10h<cmd>let g:smartJump_half_lastHL=1<CR>
 noremap L 10l<cmd>let g:smartJump_half_lastHL=1<CR>
@@ -907,6 +1005,7 @@ function! MiscMap_insertRight()
     call cursor([l:curline, l:curcol+1])
   endif
 endfunction
+" inoremap <nowait> <Up> <cmd>let miscMap_UpOption=&startofline\|set nostartofline\|normal! gk\|let &startofline=miscMap_UpOption<CR>
 inoremap <nowait> <Up> <cmd>normal! gk<CR>
 inoremap <nowait> <Down> <cmd>normal! gj<CR>
 inoremap <nowait> <Left> <cmd>call MiscMap_insertLeft()<CR>
@@ -926,27 +1025,6 @@ nnoremap <expr> <nowait> <Right> col(".") == col("$") - 1 ? "j0" : col(".") == c
 " XXX reserve <f3> to be an "do nothing" key for breaking up mappings/feedkeys()/:normal keys triggerring other mappings/keycode (only for non-nore mapping, event keycode won't be triggerred by noremap)
 " inoremap <F3> <nop>
 nnoremap <F3> <nop>
-
-" inoremap <expr> <C-L> IsCursorAtEnd() ? "<Cmd>echo 'true'<CR> " : "<Cmd>echo 'false'<CR>"
-" insert mode delete until word end
-inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" : "<Esc>lce"
-" insert mode delete until word begining (excludes current cursor) redundant
-" inoremap <expr> <C-w> IsCursorAtStart() ? "<BS>" : IsCursorAtEnd() ? "<Esc>cb<Del>" : "<Esc>lcb"
-" insert mode delete current word
-" inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
-" imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
-imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
-" imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
-imap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviWc" : "<Esc><F3>viWc"
-
-" normal mode change current word
-" nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
-nmap <C-c> viwc
-nmap <C-x> viWc
-
-" normal mode delete current word
-" nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
-nmap <C-D> viWd
 
 " increment/decrement alternatives
 nnoremap gi <C-a>

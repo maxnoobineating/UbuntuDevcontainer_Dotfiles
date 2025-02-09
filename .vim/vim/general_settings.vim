@@ -1,3 +1,13 @@
+" completion
+set pumwidth=10
+set completeopt+=menuone
+" XXX 
+" set completeopt+=noselect
+set completepopup=height:4,width:15,highlight:CocMenuSel,border:off
+
+" default shell to zsh
+set shell=/bin/zsh
+
 " line wrapping
 set wrap linebreak breakindent
 
