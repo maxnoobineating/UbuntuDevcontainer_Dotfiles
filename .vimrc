@@ -15,9 +15,10 @@ source $HOME/.vim/vim/plugin_configs.vim
 source $HOME/.vim/vim/plugin_configs_directory.vim
 source $HOME/.vim/vim/misc_mappings_sets.vim
 source $HOME/.vim/vim/debugger.vim
+source $HOME/.vim/vim/toolChain.vim
 source $HOME/.vim/vim/post_config.vim
 source $HOME/.vim/vim/highlight.vim
 
 " $runtimepath/after/
 "     - post loading
-DebuggerOff
+" DebuggerOff

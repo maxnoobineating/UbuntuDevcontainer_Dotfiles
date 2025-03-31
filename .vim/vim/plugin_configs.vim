@@ -1,7 +1,6 @@
 " =============================================================================================
 " Plugins Installation
-
-
+let g:vimspector_enable_mappings='HUMAN'
 call plug#begin('~/.vim/plugged')
     let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
     " Install vim-plug if not found
@@ -63,6 +62,7 @@ call plug#begin('~/.vim/plugged')
 
     " for solarized theme as plugin
     " Plug 'altercation/vim-colors-solarized'
+    Plug 'lifepillar/vim-gruvbox8'
 
     " gruvbox theme as plugin
     " Plug 'morhetz/gruvbox'
@@ -81,6 +81,9 @@ call plug#begin('~/.vim/plugged')
 
     " color table viewer, :XtermColorTable
     Plug 'guns/xterm-color-table.vim'
+
+    " color-scheme manager
+    Plug 'lifepillar/vim-colortemplate'
 
     " Fastfold
     Plug 'Konfekt/FastFold'
@@ -117,7 +120,10 @@ call plug#begin('~/.vim/plugged')
     Plug 'mattn/emmet-vim'
 
     " javascript
-    Plug 'pangloss/vim-javascript'
+    " Plug 'pangloss/vim-javascript'
+
+    " interface for connecting to various debugger via Debug Adapter Protocol standardized by VSCode
+    Plug 'puremourning/vimspector'
 
 call plug#end()
 
@@ -204,7 +210,7 @@ let NERDTreeHijackNetrw = 0
 
 
 " Gundo
-nnoremap <F5> :UndotreeToggle<CR>
+" nnoremap <F5> :UndotreeToggle<CR>
 
 " =====================================================
 
@@ -212,9 +218,9 @@ nnoremap <F5> :UndotreeToggle<CR>
 let g:slime_target = "tmux"
 let g:slime_no_mappings = 1
 let g:slime_python_ipython = 1
-xmap <leader>s <Plug>SlimeRegionSend
-nmap <leader>s <Plug>SlimeMotionSend
-nmap <leader>ss <Plug>SlimeLineSend
+xmap <space>s <Plug>SlimeRegionSend
+nmap <space>s <Plug>SlimeMotionSend
+nmap <space>ss <Plug>SlimeLineSend
 
 
 " comments out (not working)
@@ -297,7 +303,9 @@ let g:solarzied_italic_comments=1
 " let g:solarized_contrast="high"
 " let g:solarized_termcolors=256
 " let g:solarized_termtrans=1
-colorscheme solarized
+" colorscheme solarized
+colorscheme gruvbox8_hard
+set termguicolors
 let s:terminal_italic=1
 
 " Vim-airline-themes config
@@ -351,7 +359,8 @@ nnoremap <leader>ng :NERDTreeToggleVCS<CR>
 let g:NERDTreeShowHidden=1
 let g:NERDTreeMinimalUI=1
 let g:NERDTreeDirArrows=1
-let g:NERDTreeMapCWD='b'
+let g:NERDTreeMapJumpLastChild=''
+let g:NERDTreeMapJumpFirstChild=''
 augroup NerdTree
   " default g:NERDTreeMapQuit seems to dangle if notimeout is set
   " autocmd FileType nerdtree nnoremap <nowait> <buffer> q :q<CR>
@@ -372,6 +381,19 @@ let g:SimpylFold_fold_docstring = 0
 " =======================================================================================================
 " Coc.nvim
 " config
+" outline (alternative to tagbar?)
+function! ToggleOutline() abort
+  let winid = coc#window#find('cocViewId', 'OUTLINE')
+  if winid == -1
+    call CocAction('showOutline', 0)
+    " let winid = coc#window#find('cocViewId', 'OUTLINE')
+    " call win_gotoid(winid);
+  else
+    call coc#window#close(winid)
+  endif
+endfunction
+
+
 " for apt installed vim version < v.8.2, disable coc warning
 let g:coc_disable_startup_warning = 1
 " set selection highlight
@@ -379,7 +401,6 @@ let g:coc_global_extensions = [
 \ 'coc-pyright',
 \ 'coc-json',
 \ 'coc-clangd',
-\ 'coc-snippets',
 \ 'coc-go',
 \ 'coc-css',
 \ 'coc-html',
@@ -388,9 +409,11 @@ let g:coc_global_extensions = [
 \ 'coc-emoji'
 \ ]
 let g:coc_start_at_startup = 1
+let g:coc_default_semantic_highlight_groups = 1
 " set timeout timeoutlen=600 ttimeoutlen=100
 " preventing error signs shifting sidebar (can still be disabled by f2)
 set signcolumn=yes
+autocmd FileType scss setl iskeyword+=@-@
 autocmd CursorHold * silent call CocActionAsync('highlight')
 " mappings
 " navigate coc linter message
@@ -464,7 +487,7 @@ vnoremap <leader>af <plug>(coc-format-selected)
 nmap <nowait> <leader>a <Plug>(coc-codeaction-cursor)
 
 " Use K to show documentation in preview window
-nnoremap <silent> <leader>d :call ShowDocumentation()<CR>
+nnoremap <silent> <leader>dc :call ShowDocumentation()<CR>
 
 function! ShowDocumentation()
   if CocAction('hasProvider', 'hover')

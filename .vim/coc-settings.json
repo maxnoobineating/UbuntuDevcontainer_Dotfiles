@@ -1,9 +1,25 @@
 {
     "suggest.noselect": true,
     "diagnostic.checkCurrentLine": true,
-    "python.jediEnabled": false,
     "suggest.floatConfig": {},
     "colors.enable": true,
     "coc.preferences.jumpCommand": "tab drop",
-    "coc.preferences.useQuickfixForLocations": true
+    "coc.preferences.useQuickfixForLocations": true, 
+    "tree.key.close":"q",
+    "tree.key.collapseAll": "O",
+    "tree.key.toggle": "o",
+    "[python]": {
+      "python.jediEnabled": false
+    },
+    "[javascript]": {
+      "javascript.implementationsCodeLens.enabled": true,
+      "javascript.referencesCodeLens.enabled": true,
+      "javascript.referencesCodeLens.showOnAllFunctions": true,
+      "javascript.format.semicolons": "insert"
+    },
+    "[typescript]": {
+          "typescript.implementationsCodeLens.enabled": true,
+          "typescript.referencesCodeLens.enabled": true,
+          "typescript.referencesCodeLens.showOnAllFunctions": true,
+    }
 }

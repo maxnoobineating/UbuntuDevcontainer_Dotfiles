@@ -167,10 +167,17 @@ function! OpenManpage()
   let existence = systemlist("/bin/man -w " . l:text . " 2>/dev/null 1>/dev/null || echo $?")
   " echom "existence: " . string(existence)
   if  existence->len() > 0 && existence[0] == '16'
-    echom "alternative " . l:text . " --help generated"
     if system(l:text . " --help 2>/dev/null 1>/dev/null || echo $?") == ''
+      echom "alternative " . l:text . " --help generated"
       " execute "tab terminal sh -c " . shellescape(l:text . " --help | eval $MANPAGER")
       " use the special behaviour with vim terminal cat, it will bring the file up like a normal buffer
+      let temp_helpfile = systemlist("man -w " . l:text)[0]
+      execute "tab terminal cat " . l:temp_helpfile
+      set filetype=man
+      redraw!
+      call timer_start(10, {_ -> CMDFunc("call cursor([1, 1])")})
+    elseif system(l:text . " help 2>/dev/null 1>/dev/null || echo $?") == ''
+      echom "alternative " . l:text . " help generated"
       let temp_helpfile = systemlist("man -w " . l:text)[0]
       execute "tab terminal cat " . l:temp_helpfile
       set filetype=man
@@ -639,8 +646,8 @@ nnoremap w :call CustomWordMotion('w')<CR>
 " nmap daw vawd
 " nmap diw viwd
 " nmap dw viwd
-vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
-vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
+" vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
+" vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
 " 'W' inplace of the original 'w' (original 'W' is everything but whitespace, quite useless)
 " nnoremap W w
 " nnoremap daW daw
@@ -660,18 +667,17 @@ inoremap <expr> <C-e> IsCursorAtEnd() ? "<Del>" : IsCursorAtStart() ? "<Esc>ce" 
 " insert mode delete current word
 " inoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? "<Esc>:set virtualedit=onemore<CR>llbdw:set virtualedit=<CR>xi" : "<Esc>llbdwxi") : "<Esc>llbdwi"
 " imap <expr> <C-c> IsCursorAtStart() ? "<Esc>viwc" : IsCursorAtEnd() ? "<Esc>viwc" : "<Esc>lviwc"
-imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
+imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>l<C-c>" : "<Esc><F3><C-c>"
 " imap <expr> <C-x> IsCursorAtStart() ? "<Esc>viWc" : IsCursorAtEnd() ? "<Esc>viWc" : "<Esc>lviWc"
-imap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviWc" : "<Esc><F3>viWc"
-
+inoremap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
-nmap <C-c> viwc
-nmap <C-x> viWc
-
+nnoremap <C-c> v<Esc><cmd>call CustomWordMotion('gviw')<CR>c
+nnoremap <C-x> viwc
+" abc_def
 " normal mode delete current word
 " nnoremap <expr> <C-D> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>x" : "lbdwx") : "lbdw"
-nmap <C-D> viWd
+nmap <C-D> viwd
 
 " #############################
 " movement
@@ -899,7 +905,8 @@ endfunction
     endif
   endfunction
 
-  vnoremap Y y
+  vnoremap Y ygv
+  vnoremap y ygv
   nnoremap P <cmd>call PasteSelect('0', 'p')<CR>
   nnoremap p <cmd>call PasteSelect('"', 'p')<CR>
   vnoremap P <cmd>call PasteSelect_Visual('0', 'p', 0)<CR>

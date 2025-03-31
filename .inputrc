@@ -12,6 +12,11 @@ set mark-symlinked-directories on
 "\e[B": history-search-forward
 "\e[A": history-search-backward
 
+$if gdb
+"\C-n": history-search-forward
+"\C-p": history-search-backward
+$endif
+
 # Do not autocomplete hidden files unless the pattern explicitly begins with a dot
 set match-hidden-files off
 

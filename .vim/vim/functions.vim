@@ -1,5 +1,19 @@
 "=============================================================================="
 " Functions
+function! All(list, func)
+  " Iterate over each item in the list
+  let boolList = list->map(func)
+  for item in boolList
+    " Call the function on the item; if it returns 0 (false), return 0
+    if !item
+      return 0
+    endif
+  endfor
+  " If we made it through the loop, all items passed
+  return 1
+endfunction
+
+
 " return list of file names ordered from oldest to latest under given dir, matching given wildcard
 function! GetFilesByAccessTime(path, pattern)
     " Construct the shell command

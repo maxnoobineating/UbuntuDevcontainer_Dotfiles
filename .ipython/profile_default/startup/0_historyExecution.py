@@ -28,7 +28,7 @@ with open(temp_name, 'a') as fh:
 #    q/quit, Enter/confirm''')
 
 # open special vim command edit panel
-system_return_value = os.system(f'vim -u "{start_up_dir}" "{temp_name}"')
+system_return_value = os.system(f'vim -c "source {start_up_dir}" "{temp_name}"')
 
 if system_return_value == 0:
     with open(temp_name) as fh:

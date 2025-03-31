@@ -1,12 +1,13 @@
 " Load the default settings
-source ~/.vimrc
+" source ~/.vimrc
+set filetype=python
 
 " Your custom settings here
 " Map 'q' to quit Vim with a non-zero exit code
-nnoremap q :cq<CR>
+nnoremap <nowait><buffer> q :cq<CR>
 
 " Map 'Enter' to quit Vim with a zero exit code
-nnoremap <CR> :wq<CR>
+nnoremap <nowait><buffer> <CR> :wq<CR>
 
 " automatically moving cursor to the bottom
 autocmd BufReadPost * normal G

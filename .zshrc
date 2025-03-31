@@ -390,10 +390,12 @@ alias hist10="history 1 | awk '{\$1=\"\";print substr(\$0,2)}' | sort | uniq -c 
 alias sl=ls
 alias dc=cd
 alias py=ipython
-alias python='python3'
+# alias python='python3'
 alias info='info --vi-keys'
 alias wtf='tldr'
 alias asmcat='objdump -M intel -d --no-show-raw-insn -C -j .text'
+pwdc() { command -v xclip >/dev/null 2>&1 && pwd | xclip -selection clipboard || pwd > /mnt/c/clipboard.txt }
+mcd() { mkdir -p "$1" && cd "$1"; }
 
 # command in-line substitution disable?
 # DISABLE_MAGIC_FUNCTIONS=true
@@ -411,3 +413,4 @@ alias nvim="~/nvim-linux64/bin/nvim"
 OSSUDIR="$HOME/Desktop/Core system/nand2tetris_1"; alias b2w='cd $OSSUDIR'
 
 
+. "/root/.deno/env"eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
