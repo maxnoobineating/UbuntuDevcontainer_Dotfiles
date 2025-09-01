@@ -1,3 +1,8 @@
+# binding
+bindkey '^Z' undefined-key
+
+
+
 # Aider
 export AIDER_EDITOR=vim
 
@@ -128,6 +133,7 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting z) # zsh-vi-mode)
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
+export NNN_ICONS=1
 
 # color correction
 export TERM="xterm-256color"
@@ -413,4 +419,9 @@ alias nvim="~/nvim-linux64/bin/nvim"
 OSSUDIR="$HOME/Desktop/Core system/nand2tetris_1"; alias b2w='cd $OSSUDIR'
 
 
-. "/root/.deno/env"eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+. "/root/.deno/env"
+
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

@@ -1,4 +1,11 @@
 " #===================================================================================#
+" === Close-Quickfix Mapping === // replaced by all quickfix quit in the same tab
+" augroup QuickfixClose
+"   autocmd!
+"   autocmd FileType qf nnoremap <buffer><nowait> q :q<CR>
+" augroup END
+
+
 " dunno why but <C-i> jump list undo is remapped to tag jump...
 nnoremap <C-i> <C-I>
 
@@ -62,7 +69,7 @@ nnoremap <C-w>r <cmd>source ~/.vimrc<CR>
 " map nnoremap r to macro recording (q), because r replacement mode single replace is useless (R line replace is still there)
 if maparg('q', 'n')==''
   nnoremap q <nop>
-  nnoremap <nowait> q <cmd>echo "q recording remapped to r"<CR>
+  nnoremap <nowait> q <cmd>windo if &filetype == 'qf' \| quit \| endif<CR><cmd>echo "quit quickfix; recording remapped to r"<CR>
 endif
 nnoremap r q
 vnoremap r q
@@ -168,7 +175,7 @@ function! OpenManpage()
   " echom "existence: " . string(existence)
   if  existence->len() > 0 && existence[0] == '16'
     if system(l:text . " --help 2>/dev/null 1>/dev/null || echo $?") == ''
-      echom "alternative " . l:text . " --help generated"
+      echom "\ralternative " . l:text . " --help generated"
       " execute "tab terminal sh -c " . shellescape(l:text . " --help | eval $MANPAGER")
       " use the special behaviour with vim terminal cat, it will bring the file up like a normal buffer
       let temp_helpfile = systemlist("man -w " . l:text)[0]
@@ -177,14 +184,14 @@ function! OpenManpage()
       redraw!
       call timer_start(10, {_ -> CMDFunc("call cursor([1, 1])")})
     elseif system(l:text . " help 2>/dev/null 1>/dev/null || echo $?") == ''
-      echom "alternative " . l:text . " help generated"
+      echom "\ralternative " . l:text . " help generated"
       let temp_helpfile = systemlist("man -w " . l:text)[0]
       execute "tab terminal cat " . l:temp_helpfile
       set filetype=man
       redraw!
       call timer_start(10, {_ -> CMDFunc("call cursor([1, 1])")})
     else
-      EchomWarn "No '" . l:text . " --help' command found"
+      EchomWarn "\rNo '" . l:text . " --help' command found"
     endif
   else
       " default manpage doesn't exist for the keyword
@@ -283,59 +290,6 @@ command! -nargs=1 -complete=file GenHeader call GenHeader_function(<f-args>)
 " search in recently selected lines
 nnoremap <leader>/ /\%V
 vnoremap <leader>/ <Esc>/\%V
-
-" mapping C-w + C-hjkl for pane-enlarging switch
-function! ResizeVertical(percent)
-    execute 'vertical resize'
-    let l:current_width = winwidth(0)
-    let l:resize_amount = float2nr(l:current_width * a:percent / 100)
-    execute 'vertical resize ' . l:resize_amount
-endfunction
-function! ResizeHorizontal(percent)
-    execute 'resize'
-    let l:current_height = winheight(0)
-    let l:resize_amount = float2nr(l:current_height * a:percent / 100)
-    execute 'resize ' . resize_amount
-endfunction
-" Resize mappings with Ctrl held down
-nnoremap <C-w><C-h> :wincmd h<CR>:call ResizeVertical(75)<CR>
-nnoremap <C-w><C-j> :wincmd j<CR>:call ResizeHorizontal(75)<CR>
-nnoremap <C-w><C-k> :wincmd k<CR>:call ResizeHorizontal(75)<CR>
-nnoremap <C-w><C-l> :wincmd l<CR>:call ResizeVertical(75)<CR>
-
-
-" ========================================================================="
-" Buffer Related Actions
-" Store cursor and scroll position when leaving a buffer
-augroup BufferActions
-  autocmd!
-  autocmd BufLeave * let b:most_recent_buffer_topline = line('w0')
-  " autocmd BufEnter * let b:most_recent_buffer_topline = 0
-  autocmd BufEnter * if !exists('b:most_recent_buffer_topline') | let b:most_recent_buffer_topline = 0 | endif
-augroup END
-
-function! BufferActions_restoreScrollPosition()
-  execute "normal! zt"
-  let l:offset = b:most_recent_buffer_topline - line('w0')
-  if(l:offset == 0)
-    return
-  endif
-  if(l:offset < 0)
-    execute "normal! " . -l:offset . "\<C-Y>"
-  else
-    execute "normal! " . l:offset . "\<C-E>"
-  endif
-endfunction
-
-" next/prev buffer
-noremap <c-b>n :bn \| call BufferActions_restoreScrollPosition()<CR>
-noremap <c-b>N :bp \| call BufferActions_restoreScrollPosition()<CR>
-noremap <C-b>p :b# \| call BufferActions_restoreScrollPosition()<CR>
-" return true; open cuurent buffer into new tab
-nnoremap <C-b>t :tab split \| call BufferActions_restoreScrollPosition()<CR>
-nnoremap <C-b>a :tab sball<CR>
-" unload current buffer
-nnoremap <C-b>d :bd<CR>
 
 " ========================================================================="
 

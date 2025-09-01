@@ -2,7 +2,7 @@
 " Functions
 function! All(list, func)
   " Iterate over each item in the list
-  let boolList = list->map(func)
+  let boolList = a:list->map(function(a:func))
   for item in boolList
     " Call the function on the item; if it returns 0 (false), return 0
     if !item

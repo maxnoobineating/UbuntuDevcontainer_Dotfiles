@@ -8,6 +8,13 @@
     "tree.key.close":"q",
     "tree.key.collapseAll": "O",
     "tree.key.toggle": "o",
+    "semanticTokens.enable": true,
+    "go.goplsOptions": {
+      "semanticTokens": true
+    },
+    "[c]": {
+      "semanticTokens.enable": true
+    },
     "[python]": {
       "python.jediEnabled": false
     },

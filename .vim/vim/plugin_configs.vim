@@ -406,7 +406,8 @@ let g:coc_global_extensions = [
 \ 'coc-html',
 \ 'coc-snippets',
 \ 'coc-tsserver',
-\ 'coc-emoji'
+\ 'coc-emoji',
+\ 'coc-explorer'
 \ ]
 let g:coc_start_at_startup = 1
 let g:coc_default_semantic_highlight_groups = 1
@@ -416,6 +417,9 @@ set signcolumn=yes
 autocmd FileType scss setl iskeyword+=@-@
 autocmd CursorHold * silent call CocActionAsync('highlight')
 " mappings
+" coc-explorer
+nmap <space>e :CocCommand explorer<CR>
+
 " navigate coc linter message
 nmap <silent> <leader>en <Plug>(coc-diagnostic-next-error)
 nmap <silent> <leader>ep <Plug>(coc-diagnostic-prev-error)

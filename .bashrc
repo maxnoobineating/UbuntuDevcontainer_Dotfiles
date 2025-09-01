@@ -5,3 +5,5 @@ PROMPT_COMMAND='history -a'
 
 [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
 . "/root/.deno/env"
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
