@@ -1,0 +1,81 @@
+Full name:  VerityBlack
+Short name: verity
+Author:     maxium <zsdezsc@gmail.com>
+
+Variant:    gui 256
+Background: dark
+
+; Color palette
+Color:      myblack #333333 ~
+Color:      mywhite #fafafa ~
+
+; Highlight group definitions
+Normal      mywhite myblack
+
+Term colors: mywhite mywhite mywhite mywhite mywhite mywhite mywhite mywhite
+Term colors: myblack myblack myblack myblack myblack myblack myblack myblack
+
+; highlight SignColumn ctermbg=0 guibg=#261720
+; highlight CocMenuSel ctermfg=152 ctermbg=132 guifg=#AFD7D7 guibg=#afdfdf
+; highlight CocFloating ctermfg=96 ctermbg=0 
+; highlight Comment term=italic cterm=italic ctermfg=181 guifg=#dfafaf
+; highlight Cursor cterm=reverse ctermbg=12 guibg=#7E99E3
+; highlight Visual term=reverse cterm=reverse ctermfg=132 ctermbg=123 guibg=DarkGrey
+; highlight VertSplit ctermfg=97 ctermbg=0 gui=reverse
+; highlight SpecialKey term=bold cterm=bold ctermfg=11 ctermbg=8 guifg=Cyan
+
+; " popups
+; highlight Pmenu term=italic cterm=italic ctermfg=229 ctermbg=237 guifg=#dfafaf guibg=#54285c
+; highlight PmenuSbar term=italic cterm=italic ctermfg=229 ctermbg=240 guifg=#dfafaf guibg=#54285c
+; highlight PmenuThumb term=italic cterm=italic ctermfg=229 ctermbg=229 guifg=#dfafaf guibg=#54285c
+
+; " tabline hl group w/ airline tabline setting as well
+; highlight TabLineSel  term=underline,reverse cterm=underline,reverse ctermfg=131 ctermbg=53 gui=bold
+; highlight TabLine term=underline cterm=underline ctermfg=97 ctermbg=0 gui=underline guibg=DarkGrey
+; highlight TabLineFill term=underline cterm=underline ctermfg=97 ctermbg=0 gui=reverse
+; highlight link airline_tabline TabLine
+; highlight link airline_tabline_fill TabLineFill
+; highlight link airline_tabline_active TabLineSel
+; highlight link airline_tabline_inactive TabLine
+; highlight link airline_tabline_separator TabLine
+
+; augroup HITABFILL
+;     autocmd!
+;     autocmd User AirlineModeChanged highlight airline_warning ctermfg=232 ctermbg=167
+;     autocmd User AirlineModeChanged highlight airline_warning_bold ctermfg=232 ctermbg=167
+;     autocmd User AirlineModeChanged highlight airline_warning_inactive ctermfg=232 ctermbg=167
+;     autocmd User AirlineModeChanged highlight airline_warning_inactive_bold ctermfg=232 ctermbg=167
+
+;     autocmd User AirlineAfterTheme highlight airline_a_inactive ctermfg=232 ctermbg=250
+;     autocmd User AirlineAfterTheme highlight link airline_a_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_a_inactive_red airline_a_inactive
+
+;     autocmd User AirlineAfterTheme highlight link airline_b_inactive airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_b_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_b_inactive_red airline_a_inactive
+
+;     autocmd User AirlineAfterTheme highlight link airline_c_inactive airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_c_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_c_inactive_red airline_a_inactive
+
+;     autocmd User AirlineAfterTheme highlight link airline_x_inactive airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_x_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_x_inactive_red airline_a_inactive
+
+;     autocmd User AirlineAfterTheme highlight link airline_y_inactive airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_y_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_y_inactive_red airline_a_inactive
+
+;     autocmd User AirlineAfterTheme highlight link airline_z_inactive airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_z_inactive_bold airline_a_inactive
+;     autocmd User AirlineAfterTheme highlight link airline_z_inactive_red airline_a_inactive
+
+
+
+;     " |AirlineAfterInit|    after plugin is initialized, but before the statusline is replaced
+;     " |AirlineAfterTheme|   after theme of the statusline has been changed
+;     " |AirlineToggledOn|    after airline is activated and replaced the statusline
+;     " |AirlineToggledOff|   after airline is deactivated and the statusline is restored to the original
+;     " |AirlineModeChanged|  The mode in Vim changed.
+; augroup END
+
