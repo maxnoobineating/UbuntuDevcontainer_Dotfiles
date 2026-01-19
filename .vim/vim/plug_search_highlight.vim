@@ -187,3 +187,6 @@ nnoremap <leader>h] vi]:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h[ vi[:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h} vi}:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
 nnoremap <leader>h{ vi{:<C-u>call SepHLSearch()<CR>:set hlsearch<CR>
+
+" refresh Coc syntax highlighting
+nnoremap <leader>hr <cmd>doautocmd Syntax<CR>

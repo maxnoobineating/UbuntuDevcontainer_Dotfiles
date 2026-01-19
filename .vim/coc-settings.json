@@ -3,7 +3,7 @@
     "diagnostic.checkCurrentLine": true,
     "suggest.floatConfig": {},
     "colors.enable": true,
-    "coc.preferences.jumpCommand": "tab drop",
+    "coc.preferences.jumpCommand": "edit",
     "coc.preferences.useQuickfixForLocations": true, 
     "tree.key.close":"q",
     "tree.key.collapseAll": "O",
@@ -28,5 +28,7 @@
           "typescript.implementationsCodeLens.enabled": true,
           "typescript.referencesCodeLens.enabled": true,
           "typescript.referencesCodeLens.showOnAllFunctions": true,
-    }
+    },
+    "snippets.ultisnips.pythonPrompt": false,
+    "clangd.path": "~/.config/coc/extensions/coc-clangd-data/install/20.1.8/clangd_20.1.8/bin/clangd"
 }

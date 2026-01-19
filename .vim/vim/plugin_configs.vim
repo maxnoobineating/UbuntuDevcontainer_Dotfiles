@@ -125,6 +125,9 @@ call plug#begin('~/.vim/plugged')
     " interface for connecting to various debugger via Debug Adapter Protocol standardized by VSCode
     Plug 'puremourning/vimspector'
 
+    " copilot
+    Plug 'github/copilot.vim'
+
 call plug#end()
 
 
@@ -169,6 +172,9 @@ let g:go_highlight_variable_declarations = 1
 let g:go_highlight_variable_assignments = 1
 let g:go_highlight_diagnostic_errors = 1
 let g:go_highlight_diagnostic_warnings = 1
+let g:go_imports_autosave = 0
+let g:go_fmt_fail_silently = 1
+let g:go_metalinter_autosave = 0
 
 
 " gutentags setup

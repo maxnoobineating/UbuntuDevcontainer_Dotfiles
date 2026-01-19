@@ -1,7 +1,8 @@
 # binding
 bindkey '^Z' undefined-key
 
-
+#neovim
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
 # Aider
 export AIDER_EDITOR=vim
@@ -187,6 +188,9 @@ alias dotfile='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 # setting that update the history file before the command is executed.
 setopt inc_append_history
 setopt share_history
+setopt extended_glob
+setopt kshglob
+
 
 # copy command history into sys clipboard aliases
 function hcp () {
@@ -413,8 +417,6 @@ mcd() { mkdir -p "$1" && cd "$1"; }
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-alias nvim="~/nvim-linux64/bin/nvim"
 
 OSSUDIR="$HOME/Desktop/Core system/nand2tetris_1"; alias b2w='cd $OSSUDIR'
 

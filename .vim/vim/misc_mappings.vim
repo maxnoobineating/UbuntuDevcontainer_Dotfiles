@@ -263,8 +263,12 @@ nnoremap <leader>? :call OpenHelpFile()<CR>
 
 " function signiture related
 function! GenHeader_function(file)
+    let l:base_dir = expand('%:p:h')
+    " let l:file_path = fnamemodify(a:file, ':p', l:base_dir)
     let l:line_before = line("$")
-    execute "read !ctags --fields=+S -x --c-kinds=f " . shellescape(a:file) . " | awk '{sub(/\{/, \"\", $0); print substr($0, index($0,$5))}'"
+    " execute "read !ctags --fields=+S -x --c-kinds=f " . shellescape(a:file) . " | awk '{sub(/\{/, \"\", $0); print substr($0, index($0,$5))}'"
+    execute "read !ctags --fields=+S -x --c-kinds=f " . fnameescape(l:base_dir . '/' . a:file) . " | awk '{sub(/\{/, \"\", $0); print substr($0, index($0,$5))}'"
+
     let l:line_after = line("$")
     call StripWhitespace()
     execute (line(".") - (l:line_after - l:line_before) + 1) . "," . line(".") . "s/$/;/"
