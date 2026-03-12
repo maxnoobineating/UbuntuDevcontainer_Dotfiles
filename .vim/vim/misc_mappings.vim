@@ -6,8 +6,14 @@
 " augroup END
 
 
-" dunno why but <C-i> jump list undo is remapped to tag jump...
-nnoremap <C-i> <C-I>
+" DUNno why but <C-i> jump list undo is remapped to tag jump...
+" nnoremap <C-i> <C-I>
+" nnoremap <C-S-o> <C-I>
+set <f13>=[25~
+" map <C-i> <C-i>
+" map <f13> <C-i>
+" nnoremap <f13> <C-i>
+nnoremap <f13> <Tab>
 
 " ; . (originally ,) motion for selection
 " noremap . ,
@@ -586,16 +592,40 @@ inoremap <C-u> <C-o>u
 " inoremap <C-r> <C-o><C-r>
 
 " change 'w' word motion behaviour to excludes '_'
-function! CustomWordMotion(cmd)
+function! WordMotion_withoutUnderScore(cmd)
     let old_iskeyword=&iskeyword
     set iskeyword-=_
     execute "normal! " . a:cmd
     let &iskeyword=old_iskeyword
 endfunction
+function! CustomWordJump(direction)
+  " let CWM_nonQuotedUnit = "([^\"\\]|\\.)"
+  " let CWM
+if a:direction < 0
+    " call search('\v([A-Za-z0-9]+|\s[^A-Za-z0-9]+\ze\s.*\%#)', 'bW')
+    " call search("\\v([A-Za-z0-9]+|[({\[<\"'])", 'bW')
+    call search("\\v([A-Za-z0-9]+_*|\\zs[^[:blank:][:alnum:]]+)", 'bW')
+  else
+    " call search('\v([A-Za-z0-9]+|\%#.*\s\zs[^A-Za-z0-9]+\s)', 'W')
+    " call search("\\v([A-Za-z0-9]+|[({\[<\"'])", 'W')
+    call search("\\v([A-Za-z0-9]+_*|\\zs[^[:blank:][:alnum:]]+)", 'W')
+  endif
+endfunction
 
-nnoremap w :call CustomWordMotion('w')<CR>
-" nnoremap daw :call CustomWordMotion('daw')<CR>
-" nnoremap diw :call CustomWordMotion('diw')<CR>
+" nnoremap w :call WordMotion_withoutUnderScore('w')<CR>
+nnoremap w :call CustomWordJump(1)<CR>
+onoremap w :call CustomWordJump(1)<CR>
+" onoremap iw :call CustomInWord()<CR>
+" function! CustomInWord()
+"   " '[ sets the operator pending region
+"   call setpos("'[", searchpos("\\v\\zs\\w+", "cnbW"))
+"   call setpos("']", searchpos("\\v\\w*\\zs\\w", "cnW"))
+" endfunction
+
+nnoremap b :call CustomWordJump(-1)<CR>
+onoremap b :call CustomWordJump(-1)<CR>
+" nnoremap daw :call WordMotion_withoutUnderScore('daw')<CR>
+" nnoremap diw :call WordMotion_withoutUnderScore('diw')<CR>
 " use visual mode to change word is because command will exit insert mode
 " recursively linked to aw/iw below
 " nmap caw vawc
@@ -604,8 +634,8 @@ nnoremap w :call CustomWordMotion('w')<CR>
 " nmap daw vawd
 " nmap diw viwd
 " nmap dw viwd
-" vnoremap aw :<C-u>call CustomWordMotion('gvaw')<CR>
-" vnoremap iw :<C-u>call CustomWordMotion('gviw')<CR>
+" vnoremap aw :<C-u>call WordMotion_withoutUnderScore('gvaw')<CR>
+" vnoremap iw :<C-u>call WordMotion_withoutUnderScore('gviw')<CR>
 " 'W' inplace of the original 'w' (original 'W' is everything but whitespace, quite useless)
 " nnoremap W w
 " nnoremap daW daw
@@ -630,7 +660,7 @@ imap <expr> <C-c> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>l<C-c>" : "
 inoremap <expr> <C-x> (IsCursorAtStart()\|\|IsCursorAtEnd()) ? "<Esc><F3>lviwc" : "<Esc><F3>viwc"
 " normal mode change current word
 " nnoremap <expr> <C-c> IsCursorAtLastWord() ? (col('.') == col('$') - 1 ? ":set virtualedit=onemore<CR>lbdw:set virtualedit=<CR>xi" : "lbdwxi") : "lbdwi"
-nnoremap <C-c> v<Esc><cmd>call CustomWordMotion('gviw')<CR>c
+nnoremap <C-c> v<Esc><cmd>call WordMotion_withoutUnderScore('gviw')<CR>c
 nnoremap <C-x> viwc
 " abc_def
 " normal mode delete current word
@@ -642,8 +672,39 @@ nmap <C-D> viwd
 " tag jump
 nnoremap <Tab> <cmd>TagbarJumpNext<CR>
 nnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>
-vnoremap <Tab> <cmd>TagbarJumpNext<CR>mjgv`j
-vnoremap <S-Tab> <cmd>TagbarJumpPrev<CR>mjgv`j
+xnoremap <expr> <Tab> visualmode() == "V" ? "omjo<ESC><cmd>TagbarJumpNext<CR>V`jo" : "omjo<ESC><cmd>TagbarJumpNext<CR>v`jo"
+xnoremap <expr> <S-Tab> visualmode() == "V" ? "omjo<ESC><cmd>TagbarJumpPrev<CR>V`jo" : "omjo<ESC><cmd>TagbarJumpPrev<CR>v`jo"
+
+
+" function! s:TagbarJumpVisual(direction) abort
+"   let l:anchor = getpos('v')
+"   let l:vtype = visualmode()
+
+"   if a:direction > 0
+"     silent! execute 'TagbarJumpNext'
+"   else
+"     silent! execute 'TagbarJumpPrev'
+"   endif
+
+"   let l:newpos = getpos('.')
+"   if l:anchor[1] == 0 || l:newpos[1] == 0
+"     return
+"   endif
+
+"   call setpos("'<", l:anchor)
+"   call setpos("'>", l:newpos)
+"   if l:vtype ==# 'V'
+"     execute "normal! gvV"
+"   elseif l:vtype ==# "\<C-v>"
+"     execute "normal! gv\<C-v>"
+"   else
+"     execute "normal! gv"
+"   endif
+" endfunction
+
+" xnoremap <Tab> :<C-u>call <SID>TagbarJumpVisual(1)<CR>
+" xnoremap <S-Tab> :<C-u>call <SID>TagbarJumpVisual(-1)<CR>
+
 
 " nmap <Tab> ]]
 " nmap <S-Tab> [[

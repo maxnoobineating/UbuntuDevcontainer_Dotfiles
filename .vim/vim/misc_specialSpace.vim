@@ -7,7 +7,7 @@ nnoremap <space><backspace> f<space>xF<space>x
 vnoremap <space><backspace> <esc>`>f<space>x`<F<space>x`<hv`>h
 
 " coc hover definition:
-nnoremap <space>d <cmd>call CocAction('doHover')<CR>
+nnoremap <space>d <cmd>call CocActionAsync('doHover')<CR>
 
 " coc tagbar-alternatives? 
 nnoremap <silent><nowait> <space>o  :call ToggleOutline()<CR>

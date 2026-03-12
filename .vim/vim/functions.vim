@@ -347,25 +347,35 @@ endfunction
 " find the file at /tmp/vim_profile.log
 " use zsh command listVimProfile to see the list
 let g:vimprofilepaused = -1
+let g:profiletimer_id = -1
 " Set up an autocommand to stop profiling when exiting a file
 autocmd VimLeavePre * if g:vimprofilepaused == 1 | let g:vimprofilepaused = -1 | noautocmd wqall! | endif
 autocmd VimLeavePre * if g:vimprofilepaused == 0 | let g:vimprofilepaused = -1 | profile pause | noautocmd wqall! | endif
-" updatetime is defaulted to 4000 ms, and CursorHold is triggered if no key input in updatetime
-set updatetime=4000
-" Set up an autocommand to pause profiling after 4 seconds of inactivity
-autocmd CursorHold * if g:vimprofilepaused == 0 | echo 'profiling paused!' | profile pause | let g:vimprofilepaused = 1 | endif
+function! ProfilePauseAfter4s()
+  if g:vimprofilepaused == 0
+    echo 'profiling paused!'
+    profile pause
+    let g:vimprofilepaused = 1
+  endif
+endfunction
 function! ProfilingToggle()
     if g:vimprofilepaused == -1
         let g:vimprofilepaused = 0
         execute 'profile start /tmp/vim_profile.log'
         execute 'profile func *'
         execute 'profile file *'
+        let g:profiletimer_id = timer_start(4000, {-> ProfilePauseAfter4s()})
     elseif g:vimprofilepaused == 1
         let g:vimprofilepaused = 0
         execute 'profile continue'
+        let g:profiletimer_id = timer_start(4000, {-> ProfilePauseAfter4s()})
     else
         let g:vimprofilepaused = 1
         execute 'profile pause'
+        if g:profiletimer_id != -1
+          call timer_stop(g:profiletimer_id)
+          let g:profiletimer_id = -1
+        endif
     endif
 endfunction
 " --------------------------------------------------------------------------------

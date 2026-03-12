@@ -148,6 +148,10 @@ export IPYTHONDIR="/root/.ipython"
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 
+# preferred editor
+export EDITOR="vim"
+export VISUAL="vim"
+
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
 #   export EDITOR='vim'
@@ -400,12 +404,16 @@ alias hist10="history 1 | awk '{\$1=\"\";print substr(\$0,2)}' | sort | uniq -c 
 alias sl=ls
 alias dc=cd
 alias py=ipython
+alias python=ipython
 # alias python='python3'
 alias info='info --vi-keys'
 alias wtf='tldr'
 alias asmcat='objdump -M intel -d --no-show-raw-insn -C -j .text'
 pwdc() { command -v xclip >/dev/null 2>&1 && pwd | xclip -selection clipboard || pwd > /mnt/c/clipboard.txt }
 mcd() { mkdir -p "$1" && cd "$1"; }
+alias helgrind='valgrind --tool=helgrind'
+alias cl=claude
+
 
 # command in-line substitution disable?
 # DISABLE_MAGIC_FUNCTIONS=true

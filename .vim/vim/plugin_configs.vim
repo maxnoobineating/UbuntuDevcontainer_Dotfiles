@@ -436,7 +436,7 @@ nmap <silent> <leader>ep <Plug>(coc-diagnostic-prev-error)
 " com! Err call s:Err()      " Enable :ShowMaps to call the function
 " nnoremap <expr> <Leader>e :CocE<CR>
 " nnoremap <leader>e <Plug>(coc-diagnostic-info)
-nnoremap <leader>ee :call CocAction('diagnosticToggle')<CR>:ALEToggle<CR>
+nnoremap <leader>ee :call CocActionAsync('diagnosticToggle')<CR>:ALEToggle<CR>
 
 augroup Cocgroup
   autocmd!
@@ -449,6 +449,11 @@ augroup end
 set tagfunc=CocTagFunc " gt to use coc tag jump
 let g:cocJump_previousFile = ''
 nmap <silent> gd :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-definition)
+nnoremap <silent> gD <cmd>let g:cocJump_previousFile=expand('%:p')<CR><cmd>TabDrop call CocActionAsync('jumpDefinition')<CR>
+  " \
+  " \<cmd>execute "silent! TabDrop normal! gd"<CR>
+  " \
+  " \<cmd>call timer_start(TabAction_getTabDropTimerlen(), { timer_id -> CMDFunc("if g:cocJump_previousFile != expand('%:p') \| tabprevious \| endif")})<CR>
 nmap <silent> gy :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-type-definition)
 nmap <silent> gi :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-implementation)
 nmap <silent> gr :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-references)
@@ -457,9 +462,7 @@ nmap <silent> gr :let g:cocJump_previousFile=expand('%:p')<CR><Plug>(coc-referen
 " nnoremap <silent> gf :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| endif<CR>
 nnoremap <silent> gf <cmd>let g:cocJump_previousFile=expand('%:p')<CR><cmd>execute "silent! TabDrop normal! gf"<CR>
 " nnoremap <silent> gF :let g:cocJump_previousFile=expand('%:p')<CR>:if filereadable(expand(expand('<cfile>'))) \| execute "TabDrop tabnew " . expand('<cfile>') \| tabprevious \| endif<CR>
-nnoremap <silent> gF
-  \
-  \<cmd>let g:cocJump_previousFile=expand('%:p')<CR>
+nnoremap <silent> gF <cmd>let g:cocJump_previousFile=expand('%:p')<CR>
   \
   \<cmd>execute "silent! TabDrop normal! gf"<CR>
   \
