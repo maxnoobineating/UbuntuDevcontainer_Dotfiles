@@ -342,40 +342,51 @@ function! SetFiletypeTimeout(type, settimeout = v:true, settimeoutlen = &timeout
 endfunction
 
 
+let g:last_action_time = reltime()
+function! UpdateLastActionTime()
+  let g:last_action_time = reltime()
+endfunction
+
+function! SecondsSinceLastAction()
+  return reltimefloat(reltime(g:last_action_time))
+endfunction
+" Track cursor/text changes
+autocmd CursorMoved,CursorMovedI,TextChanged,TextChangedI * call UpdateLastActionTime()
+
+
 " vim performance profiling:
 " the second time toggle will save and close the file
 " find the file at /tmp/vim_profile.log
 " use zsh command listVimProfile to see the list
 let g:vimprofilepaused = -1
-let g:profiletimer_id = -1
 " Set up an autocommand to stop profiling when exiting a file
 autocmd VimLeavePre * if g:vimprofilepaused == 1 | let g:vimprofilepaused = -1 | noautocmd wqall! | endif
 autocmd VimLeavePre * if g:vimprofilepaused == 0 | let g:vimprofilepaused = -1 | profile pause | noautocmd wqall! | endif
+
 function! ProfilePauseAfter4s()
-  if g:vimprofilepaused == 0
+  if SecondsSinceLastAction() >= 4.0
     echo 'profiling paused!'
     profile pause
     let g:vimprofilepaused = 1
+  else
+    timer_start(1000, {->ProfilePauseAfter4s})
   endif
 endfunction
+
 function! ProfilingToggle()
     if g:vimprofilepaused == -1
-        let g:vimprofilepaused = 0
-        execute 'profile start /tmp/vim_profile.log'
-        execute 'profile func *'
-        execute 'profile file *'
-        let g:profiletimer_id = timer_start(4000, {-> ProfilePauseAfter4s()})
+      let g:vimprofilepaused = 0
+      execute 'profile start /tmp/vim_profile.log'
+      execute 'profile func *'
+      execute 'profile file *'
+      call ProfilePauseAfter4s()
     elseif g:vimprofilepaused == 1
-        let g:vimprofilepaused = 0
-        execute 'profile continue'
-        let g:profiletimer_id = timer_start(4000, {-> ProfilePauseAfter4s()})
+      let g:vimprofilepaused = 0
+      execute 'profile continue'
+      call ProfilePauseAfter4s()
     else
-        let g:vimprofilepaused = 1
-        execute 'profile pause'
-        if g:profiletimer_id != -1
-          call timer_stop(g:profiletimer_id)
-          let g:profiletimer_id = -1
-        endif
+      let g:vimprofilepaused = 1
+      execute 'profile pause'
     endif
 endfunction
 " --------------------------------------------------------------------------------

@@ -403,9 +403,10 @@ gitdl() {
 alias hist10="history 1 | awk '{\$1=\"\";print substr(\$0,2)}' | sort | uniq -c | sort -n | tail -n 10"
 alias sl=ls
 alias dc=cd
+alias ipy=ipython
 alias py=ipython
-alias python=ipython
-# alias python='python3'
+# alias python=ipython
+alias python='python3'
 alias info='info --vi-keys'
 alias wtf='tldr'
 alias asmcat='objdump -M intel -d --no-show-raw-insn -C -j .text'
