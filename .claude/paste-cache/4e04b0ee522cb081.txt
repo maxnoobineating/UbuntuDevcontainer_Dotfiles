@@ -1,0 +1,29 @@
+❯ source ../project_setup.sh
+Added environment variable ESP_IDF_VERSION = 6.0
+Added environment variable IDF_TOOLS_PATH = /root/.espressif/tools
+Added environment variable IDF_COMPONENT_LOCAL_STORAGE_URL = file:///root/.espressif/tools
+Added environment variable IDF_PATH = /root/.espressif/v6.0.1/esp-idf
+Added environment variable ESP_ROM_ELF_DIR = /root/.espressif/tools/esp-rom-elfs/20241011
+Added environment variable OPENOCD_SCRIPTS = /root/.espressif/tools/openocd-esp32/v0.12.0-esp32-20260304/openocd-esp32/share/openocd/scripts
+Added environment variable IDF_PYTHON_ENV_PATH = /root/.espressif/tools/python/v6.0.1/venv
+Added proper directory to PATH
+Activated virtual environment at /root/.espressif/tools/python/v6.0.1/venv
+Environment setup complete for the current shell session.
+These changes will be lost when you close this terminal.
+You are now using IDF version 6.0.
+eim select v6.0.1
+Executing action: reconfigure
+Running cmake in directory /root/nand2tetris_volumn/projects/esp32/test_project/build.clang
+Executing "cmake -G Ninja -B /root/nand2tetris_volumn/projects/esp32/test_project/build.clang -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/root/.espressif/tools/python/v6.0.1/venv/bin/python -DESP_PLATFORM=1 -DIDF_TOOLCHAIN=clang -DCCACHE_ENABLE=False /root/nand2tetris_volumn/projects/esp32/test_project"...
+CMake Error at CMakeLists.txt:5 (include):
+  include could not find requested file:
+
+    {IDF_PATH}/tools/cmake/project.cmake
+
+
+CMake Error at CMakeLists.txt:7 (idf_build_set_property):
+  Unknown CMake command "idf_build_set_property".
+
+
+-- Configuring incomplete, errors occurred!
+cmake failed with exit code 1, output of the command is in the /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/log/idf_py_stderr_output_9096 and /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/log/idf_py_stdout_output_9096

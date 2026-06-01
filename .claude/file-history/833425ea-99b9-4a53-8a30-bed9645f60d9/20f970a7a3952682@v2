@@ -1,0 +1,24 @@
+---
+name: dotfile-env-setup
+description: "Current dotfile/provisioning architecture, esp32 ESP-IDF env, and the migration goals being planned"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 833425ea-99b9-4a53-8a30-bed9645f60d9
+---
+
+**Current dotfile management:** Atlassian bare-repo pattern. Bare repo at `~/.cfg`, alias `dotfile='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'` (in both .zshrc and .bashrc). Remote: github.com/maxnoobineating/UbuntuDevcontainer_Dotfiles. ~111 files tracked. `status.showUntrackedFiles no`.
+
+**Bootstrap:** a GitHub gist script (`~/e42e875d0360dec9122ab5d088e66fd0/Ubuntu_Devcontainer_dotfile_setup.sh`) run via `/bin/zsh <(curl ...)`. Imperatively installs node/nvm, oh-my-zsh+p10k+plugins, vim (compiled from source), universal-ctags, gh CLI, tmux, python tooling, C/C++ tooling (pwndbg, valgrind, nasm), then clones+checks-out dotfiles, backing up conflicts to `~/config-backup`.
+
+**esp32 project** (`~/nand2tetris_volumn/projects/esp32`): ESP-IDF v6.0.1. Toolchain installed to host at `~/.espressif` (8.7 GB). `eim_config.toml` hardcodes host paths. Half-baked `Dockerfile` (`FROM my-dev-image:latest`, wrong libpython3.9 pin) — incomplete.
+
+**Pain points identified:** host is polluted (go, nvm, deno, brew, .espressif, pwndbg, stray Python-3.12 source tree, etc.); provisioning is imperative/fragile/unpinned; `~/pkglist` referenced by installPackages.sh doesn't exist; provisioning split across gist + dotfiles repo.
+
+**Migration goals (2026-05-27, planning stage — not yet executed):**
+1. vim → nvim.
+2. Comprehensive dotfile sync to port env to other devices without losing tooling.
+3. Per-project containerized envs (e.g. esp32) mounted under `~/nand2tetris_volumn`, not a shared hot pot.
+4. Portability via Dockerfile/recipe (not whole-image), with main-env changes flowing back into the recipe.
+
+**Why:** Avoid dependency hot-pot; reproducible portable env. **How to apply:** favor layered approach — live git-synced dotfiles vs declarative Dockerfile/provision for system tooling; recommend official `espressif/idf:v6.0.1` image over 8.7GB host install; note WSL2 USB flashing needs usbipd-win.

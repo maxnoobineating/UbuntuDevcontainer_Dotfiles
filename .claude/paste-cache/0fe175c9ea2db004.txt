@@ -1,0 +1,61 @@
+❯ source ../project_setup.sh
+Added environment variable ESP_IDF_VERSION = 6.0
+Added environment variable IDF_TOOLS_PATH = /root/.espressif/tools
+Added environment variable IDF_COMPONENT_LOCAL_STORAGE_URL = file:///root/.espressif/tools
+Added environment variable IDF_PATH = /root/.espressif/v6.0.1/esp-idf
+Added environment variable ESP_ROM_ELF_DIR = /root/.espressif/tools/esp-rom-elfs/20241011
+Added environment variable OPENOCD_SCRIPTS = /root/.espressif/tools/openocd-esp32/v0.12.0-esp32-20260304/openocd-esp32/share/openocd/scripts
+Added environment variable IDF_PYTHON_ENV_PATH = /root/.espressif/tools/python/v6.0.1/venv
+Added proper directory to PATH
+Activated virtual environment at /root/.espressif/tools/python/v6.0.1/venv
+Environment setup complete for the current shell session.
+These changes will be lost when you close this terminal.
+You are now using IDF version 6.0.
+eim select v6.0.1
+Executing action: reconfigure
+Running cmake in directory /root/nand2tetris_volumn/projects/esp32/test_project/build.clang
+Executing "cmake -G Ninja -B /root/nand2tetris_volumn/projects/esp32/test_project/build.clang -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/root/.espressif/tools/python/v6.0.1/venv/bin/python -DESP_PLATFORM=1 -DIDF_TOOLCHAIN=clang -DCCACHE_ENABLE=False /root/nand2tetris_volumn/projects/esp32/test_project"...
+-- IDF_TARGET not set, using default target: esp32
+-- Found Git: /usr/bin/git (found version "2.34.1")
+-- Component directory /root/.espressif/v6.0.1/esp-idf/components/mqtt does not contain a CMakeLists.txt file. No component will be added
+-- Minimal build - ON
+-- The C compiler identification is Clang 14.0.0
+-- The CXX compiler identification is Clang 14.0.0
+-- The ASM compiler identification is Clang with GNU-like command-line
+-- Found assembler: /usr/bin/clang
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: /usr/bin/clang
+-- Check for working C compiler: /usr/bin/clang - broken
+CMake Error at /usr/share/cmake-3.22/Modules/CMakeTestCCompiler.cmake:69 (message):
+  The C compiler
+
+    "/usr/bin/clang"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/CMakeFiles/CMakeTmp
+
+    Run Build Command(s):/root/.espressif/tools/ninja/1.12.1/ninja cmTC_6e7f6 && [1/2] Building C object CMakeFiles/cmTC_6e7f6.dir/testCCompiler.c.obj
+    FAILED: CMakeFiles/cmTC_6e7f6.dir/testCCompiler.c.obj
+    /usr/bin/clang   --target=xtensa-esp-elf -mcpu=esp32 -MD -MT CMakeFiles/cmTC_6e7f6.dir/testCCompiler.c.obj -MF CMakeFiles/cmTC_6e7f6.dir/testCCompiler.c.obj.d -o CMakeFiles/cmTC_6e7f6.dir/testCCompiler.c.obj -c /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/CMakeFiles/CMakeTmp/testCCompiler.c
+    clang: warning: argument unused during compilation: '-mcpu=esp32' [-Wunused-command-line-argument]
+    error: unknown target triple 'xtensa-esp-unknown-elf', please use -triple or -arch
+    ninja: build stopped: subcommand failed.
+
+
+
+
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  /root/.espressif/v6.0.1/esp-idf/tools/cmake/project.cmake:622 (__project)
+  CMakeLists.txt:8 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "/root/nand2tetris_volumn/projects/esp32/test_project/build.clang/CMakeFiles/CMakeOutput.log".
+See also "/root/nand2tetris_volumn/projects/esp32/test_project/build.clang/CMakeFiles/CMakeError.log".
+cmake failed with exit code 1, output of the command is in the /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/log/idf_py_stderr_output_11935 and /root/nand2tetris_volumn/projects/esp32/test_project/build.clang/log/idf_py_stdout_output_11935

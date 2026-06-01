@@ -1,0 +1,21 @@
+Using Arch Linux, Neovim/vscode
+
+New to esp stuff so bear with me. I figured I'd do a cli install of idf tools instead of a gui, to maybe understand what is going on.
+
+I installed it via the Arch AUR, and it placed it inside /opt/esp-idf/. Then in there, I ran \[install.sh\]([http://install.sh](http://install.sh)) to put the files into \\\~/.espressif.
+
+When I launch neovim on a sample project, the header files say they can't be found, specifically:
+
+\`'sys/features.h' file not found \[pp\_file\_not\_found\]\`
+
+So given, this, how can I configure neovim to work with esp32 projects, and give me autocomplete as well as lsp stuff. I couldn't find much information online, as most were using the Arduino IDE/VSCode with extensions. Is this even possible?
+
+I noticed something, if this can aid in pointing me into the right direction. when I write \`which clangd\` inside of a idf activated terminal, it points to the esp-clangd inside of \~/.espressif. When I write that inside of a terminal that is not activated with idf, then it points to /usr/sbin...
+
+Now I'm even more confused, I had thought that the bundled clangd that it points to would have all the header files accounted for when I am using the LSP, so that it doesn't give me false errors/warnings.
+
+Another thing I noticed, I can replicate the same thing on VSCode by using the clangd extension instead of the microsoft c++/c extension pack. The clangd one shows the false errors like neovim and the microsoft extension one doesn't.
+
+Really don't know what to do, I would have thought that running \`idf.py\` \`build\` would create the proper compile\\\_commands.json for the clangd LSP to properly work.
+
+

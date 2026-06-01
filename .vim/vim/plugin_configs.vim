@@ -422,6 +422,8 @@ let g:coc_default_semantic_highlight_groups = 1
 set signcolumn=yes
 autocmd FileType scss setl iskeyword+=@-@
 autocmd CursorHold * silent call CocActionAsync('highlight')
+" autocmd CursorHold * silent call timer_start(2000, {->CocActionAsync('doHover')})
+" autocmd CursorHold * silent call timer_start(2000, {->CMDFunc("echo 'space-d for hover information'")})
 " mappings
 " coc-explorer
 nmap <space>e :CocCommand explorer<CR>

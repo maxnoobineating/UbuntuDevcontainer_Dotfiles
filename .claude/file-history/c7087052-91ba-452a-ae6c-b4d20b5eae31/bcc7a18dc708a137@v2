@@ -1,0 +1,36 @@
+# source this file
+source "/root/.espressif/tools/activate_idf_v6.0.1.sh"
+
+
+mkdir -p ./main
+cat > ./main/CMakeLists.txt << 'EOF'
+idf_component_register(SRCS "main.c"
+                       PRIV_REQUIRES spi_flash
+                       INCLUDE_DIRS "")
+EOF
+
+cat > main/main.c << 'EOF'
+#include <stdio.h>
+
+void app_main(void) {
+
+}
+EOF
+
+PROJECT_NAME=$(basename $(pwd))
+cat > CMakeLists.txt << EOF
+cmake_minimum_required(VERSION 3.10)
+project($PROJECT_NAME)
+EOF
+
+cat > ./README.md << 'EOF'
+<!--
+this config is automatically created for clangd compile_commands.json generation
+once you added new api/components, just do 
+`idf.py -B build.clang reconfigure`
+to update the compile_commands.json
+-->
+EOF
+
+idf.py -B build.clang -D IDF_TOOLCHAIN=clang reconfigure
+ln -sf ./build.clang/compile_commands.json ./compile_commands.json

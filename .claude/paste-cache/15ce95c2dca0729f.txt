@@ -1,0 +1,19 @@
+╰─❯ apt install --upgrade python3
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+python3 is already the newest version (3.10.6-1~22.04.1).
+The following packages were automatically installed and are no longer required:
+  fonts-droid-fallback fonts-noto-mono gem-doc ghostscript gsfonts i965-va-driver imagemagick-6-common
+  intel-media-va-driver liba52-0.7.4 libaom3 libassimp5 libavcodec58 libavutil56 libcdio19 libcodec2-1.0 libdav1d5
+  libdca0 libde265-0 libdraco4 libdvdread8 libfftw3-double3 libftgl2 libgavl2 libglu1-mesa libgmerlin-avdec2 libgs9
+  libgs9-common libgsm1 libheif1 libidn12 libigdgmm12 libijs-0.35 libjbig2dec0 liblqr-1-0 libmad0
+  libmagick++-6.q16-8 libmagickcore-6.q16-6 libmagickwand-6.q16-6 libmfx1 libminizip1 libopengl0 libopenjp2-7
+  libpaper-utils libpaper1 libportaudio2 libquicktime2 libsass1 libshine3 libsnappy1v5 libsoxr0 libswresample3
+  libswscale5 libtk8.6 libudf0 libva-drm2 libva-x11-2 libva2 libvdpau1 libwebpdemux2 libwebpmux3 libx264-163
+  libx265-199 libxvidcore4 libzvbi-common libzvbi0 mesa-va-drivers mesa-vdpau-drivers node-html5shiv
+  ocl-icd-libopencl1 poppler-data puredata puredata-core puredata-dev puredata-doc puredata-extra puredata-gui
+  puredata-gui-l10n puredata-utils tcl tk tk8.6 va-driver-all vdpau-driver-all xbitmaps xterm
+Use 'apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+N: Ignoring file 'github-cli.list.backup' in directory '/etc/apt/sources.list.d/' as it has an invalid filename extension

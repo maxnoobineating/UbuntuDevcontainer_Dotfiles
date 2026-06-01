@@ -1,0 +1,29 @@
+If these are the only errors and it doesn't stop because of exceeding the error limit, that's really good enough. I am in a similar situation, but with plain clangd and a different editor. All of the include paths and necessary stuff is in the compile commands, and once the editor runs clangd it should be able to figure it out.
+
+Run clangd with the args --limit-results=0 --all-scopes-completion --limit-references=0 --background-index --background-index-priority=background --enable-config for more thorough suggestions, then you can try silencing unimportant errors with ~/.config/clangd/config.yaml:
+
+CompileFlags:
+    Add:
+        [
+            -ferror-limit=99999,
+            # -I,
+            # /usr/lib/modules/6.18.2-arch2-1/build/include/,
+            -Wno-implicit-function-declaration,
+        ]
+    # Remove:
+    #     - -mlongcalls
+    #     - -mdisable-hardware-atomics
+    #     - -mno-target-align
+    #     - -fno-shrink-wrap
+    #     - -fstrict-volatile-bitfields
+    #     - -fno-tree-switch-conversion
+    #     - -fzero-init-padding-bits=all
+    #     - -fno-malloc-dce
+Diagnostics:
+    Suppress:
+        #         - pp_file_not_found
+        - unused-includes
+In my case there are a few annoying errors like these, but I can still get perfect language server functionality. I think these probably have to do with IDF being GCC and are deep enough in the code not to really matter.
+
+Are there any fatal ones or only these odd warnings? Try the LSP functionality and checking clangd's output/logs, it might work to some extent anyway or reveal why it doesn't
+
