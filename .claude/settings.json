@@ -1,4 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Read(~/.claude/memory_docs_live/**)",
+      "Read(~/.claude/memory_docs_archive/**)",
+      "Read(~/.claude/memory_live/**)"
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "sh /root/.claude/statusline-command.sh"
@@ -7,5 +14,6 @@
     "clangd-lsp@claude-plugins-official": true
   },
   "effortLevel": "medium",
+  "tui": "default",
   "autoMemoryEnabled": true
 }

@@ -1,8 +1,54 @@
 " Enter based mapping
+" let s:key = '<CR>'
+" let s:keybind_hints = Setup_keybindHint(s:key)
+" tool startup, UI creation
+
+
+" This filter function is called on any keypress inside the popup.
+function! s:close_popup(id, key) abort
+  " Close the popup window.
+  if a:key ==? 'q' || a:key == "\<CR>" || a:key == "\<Esc>" || a:key ==? "x"
+    call popup_close(a:id)
+  endif
+  " Return the key so that normal key processing continues.
+  return a:key
+endfunction
+
+" quick todo list - add todo list to current session
+let g:env_sessionTODO_path = fnamemodify("~/.vim/", ':p') . 'session_todoList/'
+" This function is called when the timer expires.
+function! s:show_TODO_popup() abort
+  let todo_file = g:env_sessionTODO_path . fnamemodify(v:this_session, ':t') . '.txt'
+  " let l:lines = get(g:, 'startify_session_saveTODO', [])
+  let l:width  = float2nr(&columns * 0.7)
+  let l:height = float2nr(&lines * 0.5)
+  let l:command = 'vim -c "silent! source ' . g:env_sessionTODO_path . 'todo_init.vim' . '" '
+  let buf = term_start(l:command . todo_file, #{hidden: 1, term_finish: 'close'})
+  call setbufvar(buf, '&bufhidden', 'wipe')
+  let l:opts = {
+        \ 'minwidth': l:width,
+        \ 'minheight': l:height,
+        \ 'padding': [0,0,0,0],
+        \ 'border': [],
+        \ 'borderhighlight': ['Terminal'],
+        \ 'borderchars': ['─', '│', '─', '│', '╭',  '╮', '╯', '╰']
+        \ }
+  let winid = popup_create(buf, l:opts)
+  call win_gotoid(winid)
+  " let s:popup_winid = popup_create(l:lines, l:opts)
+  " write the buffer's current lines back into the global var when the
+  " window/buffer goes away, regardless of how it was closed
+endfunction
+command! ShowTODOPopup call s:show_TODO_popup()
+nnoremap <CR>l <cmd>ShowTODOPopup<CR>
+" call add(s:keybind_hints, "<CR>l  - show popup window of the todo list of current session")
+
+
 " implicit category: insert/create things
 
 " create a timer
 nnoremap <expr> <CR>t TimerReminder()
+" call add(s:keybind_hints, "<CR>t  - show popup window of the todo list of current session")
 " Define a function to parse the input and start the timer.
 function! TimerReminder() abort
   " Prompt for time input. Examples: "10m", "1hr", "30s", or just "30"
@@ -36,19 +82,10 @@ function! s:show_reminder(timer) abort
   " call win_execute(s:popup_winid, 'nnoremap <buffer><nowait> <CR> <CR>')
 endfunction
 
-" This filter function is called on any keypress inside the popup.
-function! s:close_popup(id, key) abort
-  " Close the popup window.
-  if a:key ==? 'q' || a:key == "\<CR>" || a:key == "\<Esc>" || a:key ==? "x"
-    call popup_close(a:id)
-  endif
-  " Return the key so that normal key processing continues.
-  return a:key
-endfunction
-
 
 " new lining selected item and autoformat
 vnoremap <CR><CR> c<CR><CR><Up><Esc>p==
+" call add(s:keybind_hints, "<CR><CR>  - show popup window of the todo list of current session")
 
 " open vimscript command window
 " execute selected script

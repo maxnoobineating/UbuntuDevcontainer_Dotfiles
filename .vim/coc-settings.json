@@ -1,4 +1,20 @@
 {
+    "python.analysis.stubPath": "/root/stubs",
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.pythonPath": "/usr/local/bin/python3",
+    "pyright.trace.server": "verbose",
+    "workspace.rootPatterns":[
+      "pyrightconfig.json",
+      "pyproject.toml",
+      ".git",
+      "setup.py",
+      "setup.cfg",
+      "Cargo.toml",
+      "package.json",
+      "CMakeLists.txt",
+      "compile_commands.json",
+      "Makefile"],
+
     "suggest.noselect": true,
     "diagnostic.checkCurrentLine": true,
     "suggest.floatConfig": {},
@@ -16,7 +32,8 @@
       "semanticTokens.enable": true
     },
     "[python]": {
-      "python.jediEnabled": false
+      "python.jediEnabled": false,
+
     },
     "[javascript]": {
       "javascript.implementationsCodeLens.enabled": true,

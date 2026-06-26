@@ -1,5 +1,40 @@
 "=============================================================================="
 " Functions
+
+" keybind hint
+function! s:unconditional_close_popup(id, key) abort
+  " Close the popup window.
+  call popup_close(a:id)
+  " Return the key so that normal key processing continues.
+  return a:key
+endfunction
+
+let g:keybindHint_library = {}
+function! Show_keybindHint(hint) abort
+  " Define the message to display.
+  " Set popup options.
+  let l:opts = {
+        \ 'minwidth': max(map(a:hint, {x->len(x)})) + 4,
+        \ 'borderchars': ['─', '│', '─', '│', '╭',  '╮', '╯', '╰']
+        \ 'padding': [0,1,0,1],
+        \ 'borderhighlight': ['Terminal'],
+        \ 'filter': function('s:unconditional_close_popup'),
+        \ 'mapping': v:false
+        \ }
+  " Create the popup; store its id in a script variable.
+  " let s:popup_winid = popup_dialog([a:hint], l:opts)
+  call popup_dialog([a:hint], l:opts)
+  " call win_execute(s:popup_winid, 'nnoremap <buffer><nowait> <CR> <CR>')
+endfunction
+
+function! Setup_keybindHint(key) abort
+  let g:keybindHint_library[a:key] = []
+  " execute "autocmd KeyInputPre n <cmd>if v:char==#". a:key . " | call Show_keybindHint(g:keybindHint_library['" . a:key . "']) | endif<CR>"
+  execute "nmap <nowait> " . a:key . " <cmd>call Show_keybindHint(g:keybindHint_library['" . a:key . "'])<CR>" . a:key
+  return g:keybindHint_library[a:key]
+endfunction
+
+
 function! All(list, func)
   " Iterate over each item in the list
   let boolList = a:list->map(function(a:func))

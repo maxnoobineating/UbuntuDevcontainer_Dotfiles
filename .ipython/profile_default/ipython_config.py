@@ -437,7 +437,7 @@ c.InteractiveShellApp.extensions = ['autoreload']
 #  is passed through a pager (like 'less'), and some pagers get confused with
 #  color codes, this capability can be turned off.
 #  Default: True
-c.InteractiveShell.color_info = True
+# c.InteractiveShell.color_info = True  # removed in IPython 8.x, covered by .colors
 
 ## Set the color scheme (NoColor, Neutral, Linux, or LightBG).
 #  Choices: any of ['Neutral', 'NoColor', 'LightBG', 'Linux'] (case-insensitive)
@@ -594,7 +594,7 @@ c.InteractiveShell.colors = 'Neutral'
 
 ## 
 #  See also: InteractiveShell.color_info
-c.TerminalInteractiveShell.color_info = True
+# c.TerminalInteractiveShell.color_info = True  # removed in IPython 8.x, covered by .colors
 
 ## Set the color scheme (NoColor, Neutral, Linux, or LightBG).
 #  See also: InteractiveShell.colors

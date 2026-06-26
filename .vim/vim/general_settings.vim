@@ -14,7 +14,7 @@ set wrap linebreak breakindent
 " global variables
 let g:env_shellscript_path = fnamemodify("~/.vim/vim", ':p') . 'shellscript/'
 if !isdirectory(g:env_shellscript_path)
-  call mkdir(g:env_shellscript_path)
+call mkdir(g:env_shellscript_path)
 endif
 let &path.="," . $CPATH->split(':')->join(',')
 

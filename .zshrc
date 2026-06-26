@@ -1,6 +1,7 @@
 # binding
 bindkey '^Z' undefined-key
 
+
 #neovim
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
@@ -326,84 +327,74 @@ hcat() {
 }
 
 gitdl() {
-  # Usage: gitdl <github_url>
-  # Example: gitdl https://github.com/cirosantilli/test-git-partial-clone-big-small-no-bigtree/small
-  #
-  # The script:
-  #   1. Parses the GitHub URL into the repository URL and the target directory (if provided).
-  #   2. Clones the repo partially with --depth=1, --filter=tree:0.
-  #   3. Enables sparse-checkout to fetch only the target directory.
-  #   4. Moves the target directory’s contents (only) to the current working directory.
-  #   5. Deletes the temporary clone.
-  # set -e
-  if [ "$#" -lt 2 ]; then
-      echo "Usage: $0 <github_url>"
-      exit 1
+  # Usage: gitdl <github_url> [dest_name]
+  # Parses the subdir from the URL automatically (handles /tree/<branch>/path).
+  # dest_name: optional rename for the downloaded directory (default: basename of subdir or repo name)
+  if [ "$#" -lt 1 ]; then
+      echo "Usage: gitdl <github_url> [dest_name]"
+      return 1
   fi
-  # Save the original directory (destination)
   orig_dir=$(pwd)
-  # Get the provided URL and remove any trailing slash or query string.
   github_url="$1"
   github_url="${github_url%/}"
   github_url="${github_url%%\?*}"
-  # cuz github don't always structure url to reflect dir path (e.g. <repo_url>/tree/main/<actual-path>)
-  # just specify it yourself, github give you a copy-path button for that
-  target_path="$2"
-  # We expect URLs starting with "https://github.com/"
+  dest_name="$2"
+
   prefix="https://github.com/"
   if [[ "$github_url" != "$prefix"* ]]; then
       echo "Error: URL must start with $prefix"
-      exit 1
+      return 1
   fi
-  # Remove the prefix to extract the remainder: user/repo[/subdir...]
+
   rest="${github_url#$prefix}"
   user=$(echo "$rest" | cut -d'/' -f1)
   repo=$(echo "$rest" | cut -d'/' -f2)
   repo_url="$prefix$user/$repo.git"
-  # If extra path components exist, that’s our target directory.
-  # target_path=$(echo "$rest" | cut -d'/' -f3-)
-  if [ -n "$target_path" ]; then
-      # Prepend a slash to match sparse-checkout syntax.
-      target_path="/$(echo "$target_path" | sed 's|^/||')"
-      echo "Target directory specified: $target_path"
+
+  # Parse subdir: strip /tree/<branch>/ if present, else use path after user/repo directly
+  after_repo=$(echo "$rest" | cut -d'/' -f3-)
+  if [[ "$after_repo" == tree/* ]]; then
+      sparse_path=$(echo "$after_repo" | cut -d'/' -f3-)
   else
-      echo "No target directory specified; entire repository (without .git) will be downloaded."
+      sparse_path="$after_repo"
   fi
-  # Create a temporary directory for cloning.
+
+  if [ -z "$dest_name" ]; then
+      dest_name=$([ -n "$sparse_path" ] && basename "$sparse_path" || echo "$repo")
+  fi
+  # resolve dest: absolute if starts with /, else relative to orig_dir
+  [[ "$dest_name" == /* ]] && dest="$dest_name" || dest="$orig_dir/$dest_name"
+
   tmpdir=$(mktemp -d)
-  echo "Cloning repository into temporary directory: $tmpdir"
+  echo "Cloning $repo_url"
   cd "$tmpdir"
   git clone -n --depth=1 --filter=tree:0 "$repo_url"
   cd "$repo"
-  # If a target directory was specified, use sparse-checkout.
-  if [ -n "$target_path" ]; then
-      echo "Setting sparse checkout for target: $target_path"
+
+  if [ -n "$sparse_path" ]; then
+      echo "Sparse checkout: $sparse_path → $dest"
       git sparse-checkout init --cone
-      # ls -rla ./
-      git sparse-checkout set --no-cone "$target_path"
-  fi
-  git checkout
-  # Now, move the target files to the original directory.
-  if [ -n "$target_path" ]; then
-      # Remove the leading slash to get the folder name relative to repo root.
-      target_folder=$(echo "$target_path" | sed 's|^/||')
-      echo "Moving files from '$target_folder' to '$orig_dir'"
-      mv ./"$target_folder"/* "$orig_dir"/
+      git sparse-checkout set --no-cone "$sparse_path"
+      git checkout
+      mv "./$sparse_path" "$dest"
   else
-      echo "Moving repository files (excluding .git) to '$orig_dir'"
-      mv --exclude='.git' ./* "$orig_dir"/
+      echo "Downloading full repo → $dest"
+      git checkout
+      cd "$tmpdir"
+      rm -rf "./$repo/.git"
+      mv "./$repo" "$dest"
   fi
-  # Clean up the temporary directory.
+
   cd "$orig_dir"
   rm -rf "$tmpdir"
-  echo "Done."
+  echo "Done: $dest_name"
 }
 
 # alias hist10="history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10"
 alias hist10="history 1 | awk '{\$1=\"\";print substr(\$0,2)}' | sort | uniq -c | sort -n | tail -n 10"
 alias sl=ls
 alias dc=cd
-alias ipy=ipython
+# alias ipy=ipython
 alias py=ipython
 # alias python=ipython
 alias python='python3'

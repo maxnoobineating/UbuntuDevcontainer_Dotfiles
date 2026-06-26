@@ -199,7 +199,8 @@ let g:startify_session_persistence = 1
 let g:startify_session_before_save = [ 'silent! call CloseSpecialBuffers()', 'silent! call CloseUnusedBuffers()']
 let g:startify_session_savevars = [
       \ 'g:startify_session_savevars',
-      \ 'g:startify_session_savecmds'
+      \ 'g:startify_session_savecmds',
+      \ 'g:startify_session_saveTODO'
       \ ]
 let g:startify_session_savecmds = []
 
@@ -259,11 +260,15 @@ let g:ale_fixers = {'bash': ['shfmt'],
       \ 'c': ['clang-format'],
       \ 'cpp': ['clang-format'],
       \ 'javascript': ['prettier', 'eslint']}
-let g:ale_sign_error = '>>'
-let g:ale_sign_warning = '--'
-let g:ale_lint_on_text_changed = 'always'
+" let g:ale_sign_error = '>>'
+" let g:ale_sign_warning = '--'
+let g:ale_lint_on_text_changed = 'normal'
 " better C/C++ linting
 let g:ale_cpp_clangd_executable = 'clangd'
+" reduce all flake8 error to warning, cuz it's too annoying
+let g:ale_type_map = {
+\   'flake8': {'ES': 'WS', 'E': 'W'},
+\ }
 
 
 " indentline config
